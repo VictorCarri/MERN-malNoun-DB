@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const Noun = require("../models/noun.js"); // Noun model
+const requireAuth = require("../middleware/AuthMiddleware"); // Authentication middleware
 
 // GET all nouns
 router.get("/nouns", (req, res, next) => {
@@ -13,7 +14,7 @@ router.get("/nouns", (req, res, next) => {
 );
 
 // POST to create a new noun entry
-router.post("/nouns", (req, res, next) => {
+router.post("/nouns", requireAuth, (req, res, next) => {
 		if (req.body.singular)
 		{
 			Noun.create(req.body) // Create a new noun
@@ -33,7 +34,7 @@ router.post("/nouns", (req, res, next) => {
 );
 
 // DELETE a noun by ID
-router.delete("/nouns/:id", (req, res, next) => {
+router.delete("/nouns/:id", requireAuth, (req, res, next) => {
 		Noun.findOneAndDelete(
 			{
 				"_id": req.params.id // ID of the noun to delete
@@ -45,7 +46,8 @@ router.delete("/nouns/:id", (req, res, next) => {
 );
 
 // PATCH a noun by ID
-router.patch("/nouns/:id", (req, res, next) => {
+router.patch("/nouns/:id", requireAuth, (req, res, next) => {
+		console.log("PATCH\n\tNoun ID: %o\n\tReq body: %o", req.params.id, req.body);
 		Noun.findByIdAndUpdate(
 			req.params.id,
 			req.body,
@@ -55,8 +57,11 @@ router.patch("/nouns/:id", (req, res, next) => {
 			}
 		)
 		.then(updatedNoun => {
+				console.log("PATCH\n\tUpdated noun = %o", updatedNoun);
+		
 				if (!updatedNoun)
 				{
+					console.log("PATCH\n\tNoun not found");
 					return res.status(404).json(
 						{
 							error: "Noun not found"

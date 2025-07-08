@@ -28,6 +28,9 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
+/* Cookies */
+app.use(cookieParser());
+
 /* Routes handling */
 
 // API routes
@@ -38,8 +41,6 @@ app.use("/api", nounRoutes);
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
-/* Cookies */
-app.use(cookieParser);
 
 // Default GET route
 app.use((err, req, res, next) => {
