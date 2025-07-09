@@ -103,13 +103,13 @@ module.exports.Login = async (req, res, next) => {
 		console.log("Login: token = %o", token);
 		res.cookie("token", token, {
 				withCredentials: true,
-				httpOnly: false
+				httpOnly: true
 			}
 		);
-		res.status(201)
+		res.status(200)
 		.json(
 			{
-				message: "User logged in successfully"
+				success: true
 			}
 		);
 	}
@@ -123,5 +123,21 @@ module.exports.Login = async (req, res, next) => {
 				"error": "Unknown"
 			}
 		);
+	}
+};
+
+module.exports.Logout = async (req, res, next) => {
+	console.log(req.cookies);
+	
+	if (req.cookies.token) // The user is logged in
+	{
+		res.clearCookie("token") // Clear the token cookie
+		.status(200)
+		.json(
+			{
+				"status": "loggedOut"
+			}
+		)
+		;
 	}
 };

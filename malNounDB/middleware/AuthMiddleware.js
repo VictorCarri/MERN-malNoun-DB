@@ -38,7 +38,7 @@ module.exports = async function requireAuth (req, res, next) {
 				{
 					return res.json(
 						{
-							status: false
+							loggedIn: false
 						}
 					);
 				}

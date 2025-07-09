@@ -9,6 +9,7 @@ const Mongoose = mongoose.Mongoose;
 const { nounsConn, usersConn } = require("./conns.js");
 require('dotenv').config(); // dotEnv
 const cookieParser = require("cookie-parser");
+var cors = require("cors");
 
 // Creates the express app
 const app = express();
@@ -19,13 +20,13 @@ const port = process.env.PORT || 5000;
 // Override Mongoose's Promise with Node's Promise
 mongoose.Promise = global.Promise;
 
-// CORS configuration
+/*// CORS configuration
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
-});
-
+});*/
+app.use(cors()); // Enable pre-flight requests for all routes
 app.use(bodyParser.json());
 
 /* Cookies */
