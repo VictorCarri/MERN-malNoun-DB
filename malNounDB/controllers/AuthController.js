@@ -103,15 +103,20 @@ module.exports.Login = async (req, res, next) => {
 		console.log("Login: token = %o", token);
 		res.cookie("token", token, {
 				withCredentials: true,
-				httpOnly: true
+				httpOnly: true,
+				secure: false,
+				sameSite: "none",
+				maxAge: 24 * 60 * 60
 			}
 		);
 		res.status(200)
 		.json(
 			{
-				success: true
+				success: true,
+				userName: user.username
 			}
 		);
+		next();
 	}
 
 	catch (e)
@@ -127,10 +132,11 @@ module.exports.Login = async (req, res, next) => {
 };
 
 module.exports.Logout = async (req, res, next) => {
-	console.log(req.cookies);
+	console.log("Logout: request cookies: %o", req.cookies);
 	
 	if (req.cookies.token) // The user is logged in
 	{
+		console.log("Logout: The user is logged in, logging them out");
 		res.clearCookie("token") // Clear the token cookie
 		.status(200)
 		.json(
@@ -139,5 +145,6 @@ module.exports.Logout = async (req, res, next) => {
 			}
 		)
 		;
+		next();
 	}
 };

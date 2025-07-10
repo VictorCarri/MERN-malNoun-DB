@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { BForm, BFormGroup, BFormInput, BButton, BAlert } from "bootstrap-vue-next";
 import { reactive, ref } from "vue";
+import { useUserStore } from "../stores/UserStore";
 </script>
 
 <template>
 	<div class="login">
+		<BAlert
+			variant="success"
+			v-model="showSuccessAlert"
+		>
+			Successfully logged in, redirecting...
+		</BAlert>
 		<BForm v-if="show" @submit="onLogin" @reset="onReset">
 			<BFormGroup
 				id="emailInpGroup"
@@ -50,13 +57,6 @@ import { reactive, ref } from "vue";
 				Reset
 			</BButton>
 		</BForm>
-
-		<BAlert
-			variant="success"
-			v-model="showSuccessAlert"
-		>
-			Successfully logged in, redirecting...
-		</BAlert>
 	</div>
   </template>
 
@@ -70,15 +70,17 @@ data() {
 				password: ""
 			},
 			show: true,
-			showSuccessAlert: false
+			showSuccessAlert: false,
+			store: useUserStore()
 		};
 	},
 	methods: {
 		onLogin(e)
 		{
 			e.preventDefault();
-			console.log("Logging in...");
-			fetch("http://15.156.81.125:5000/auth/login",
+			console.log("Logging in...\nPinia store = %o\nUser API URL = %s", this.store, this.store.getUserAPIURL);
+			fetch(this.store.getUserAPIURL + "login",
+			//fetch("http://15.156.81.125:5000/auth/login",
 				{
 					method: "POST",
 					headers: {
@@ -102,8 +104,12 @@ data() {
 						this.showSuccessAlert = true;
 						setTimeout(() => {
 							this.showSuccessAlert = false;
+							//this.$store.commit("loginUser"); // Mark the user as logged in in our app
+							this.store.logUserIn(); // Log the user in
+							//this.$store.commit("setUserName", data.userName);
+							this.store.setUserName(data.userName);
 							this.$router.push("/"); // Redirect to the home page
-						}, 5000);
+						}, 3000);
 					}
 
 					else // Login error
