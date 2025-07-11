@@ -7,7 +7,7 @@ module.exports.neitherTokenNorRefresh = (accessCookie, refreshCookie) => {
 	return !accessCookie && !refreshCookie;
 };
 
-module.exports.findReqUser = (accessToken) => {
+module.exports.findReqUser = async (accessToken) => {
 	const decodedAccessToken = jwt.verify(accessToken, process.env.TOKEN_KEY);
 	const reqUser = await User.findById(decodedAccessToken.id);
 	return reqUser;

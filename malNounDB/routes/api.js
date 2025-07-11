@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const Noun = require("../models/noun.js"); // Noun model
-const requireAuth = require("../middleware/AuthMiddleware"); // Authentication middleware
+const { requireAuth } = require("../middleware/AuthMiddleware"); // Authentication middleware
 
 // GET all nouns
 router.get("/nouns", (req, res, next) => {

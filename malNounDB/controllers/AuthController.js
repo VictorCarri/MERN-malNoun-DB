@@ -105,9 +105,10 @@ module.exports.Login = async (req, res, next) => {
 			);
 		}
 	
-		const token = createSecretToken(user.id); // Create a JWT token using the user's ID and our key
-		const refreshToken = createRefreshToken(user.id); // Create a JWT refresh token
+		const token = await createSecretToken(user.id); // Create a JWT token using the user's ID and our key
 		console.log("Login: token = %o", token);
+		const refreshToken = await createRefreshToken(user.id); // Create a JWT refresh token
+		console.log("Login: refreshToken = %o", refreshToken);
 		/*res.cookie("token", token, {
 				httpOnly: true,
 				secure: true,
@@ -150,7 +151,7 @@ module.exports.Login = async (req, res, next) => {
 module.exports.Logout = async (req, res, next) => {
 	console.log("Logout: request cookies: %o", req.cookies);
 	
-	if (req.cookies.token) // The user is logged in
+	if (req.cookies.token || req.cookies.refreshToken) // The user is logged in
 	{
 		console.log("Logout: The user is logged in, logging them out");
 		res.clearCookie("token") // Clear the token cookie
@@ -185,7 +186,7 @@ module.exports.Refresh = async (req, res, next) => {
 	try
 	{
 		const decoded = jwt.verify(refreshToken, process.env.TOKEN_KEY); // Verify the refresh token
-		const accessToken = createSecretToken(decoded.id); // Create a new temporary secret token
+		const accessToken = await createSecretToken(decoded.id); // Create a new temporary secret token
 		/*res.cookie("token", accessToken, { // Set a new temporary access token cookie
 				httpOnly: true,
 				secure: true,
