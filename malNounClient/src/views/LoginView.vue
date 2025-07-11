@@ -79,7 +79,7 @@ data() {
 		{
 			e.preventDefault();
 			console.log("Logging in...\nPinia store = %o\nUser API URL = %s", this.store, this.store.getUserAPIURL);
-			fetch(this.store.getUserAPIURL + "login",
+			fetch(this.store.getUserAPIURL + "/login",
 			//fetch("http://15.156.81.125:5000/auth/login",
 				{
 					method: "POST",
@@ -91,7 +91,8 @@ data() {
 							email: this.form.email,
 							password: this.form.password
 						}
-					)
+					),
+					credentials: "include"
 				}
 			)
 			.then(resp => resp.json())

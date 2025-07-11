@@ -9,7 +9,7 @@ const Mongoose = mongoose.Mongoose;
 const { nounsConn, usersConn } = require("./conns.js");
 require('dotenv').config(); // dotEnv
 const cookieParser = require("cookie-parser");
-var cors = require("cors");
+const cors = require("cors");
 
 // Creates the express app
 const app = express();
@@ -26,7 +26,13 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });*/
-app.use(cors()); // Enable pre-flight requests for all routes
+const corsOptions = {
+	origin: true, // Reflect the request origin
+	methods: ["GET", "PUT", "POST", "OPTIONS", "PATCH", "DELETE"],
+	credentials: true
+};
+
+app.use(cors(corsOptions)); // Enable pre-flight requests for all routes
 app.use(bodyParser.json());
 
 /* Cookies */

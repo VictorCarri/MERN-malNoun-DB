@@ -1,6 +1,9 @@
 const User = require("../models/user");
-const { createSecretToken } = require("../utils/SecretToken");
+const { createSecretToken, createRefreshToken } = require("../utils/SecretToken");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { setTokenCookie, setRefreshCookie } = require("../utils/SetCookies"); // Cookie setters
+const { neitherTokenNorRefresh, findReqUser, markAsNotLoggedIn, genNewAccessToken, markAsLoggedIn } = require("../utils/LoginInfoAndHandlers");
 
 module.exports.Signup = async (req, res, next) => {
 	try
@@ -21,17 +24,19 @@ module.exports.Signup = async (req, res, next) => {
 	
 		const user = await User.create({email, password, username, createdAt});
 		console.log("Signup: user = %o", user);
-		const token = createSecretToken(user._id);
+		const token = createSecretToken(user.id);
 		console.log("Signup: token = %o", token);
-	
-		res.cookie("token", token, {
+		const refreshToken = createRefreshToken(user.id); // Create a JWT refresh token
+		console.log("Signup: refresh token = %o", refreshToken);
+		/*res.cookie("token", token, {
 				withCredentials: true,
 				httpOnly: true,
-				sameSite: "lax",
-				maxAge: 24 * 60 * 60 * 1000
+				sameSite: "none",
+				maxAge: 60 * 60
 			}
-		);
-	
+		);*/
+		setTokenCookie(res, token);
+		setRefreshCookie(res);
 		res.status(201)
 		.json(
 			{
@@ -52,6 +57,7 @@ module.exports.Signup = async (req, res, next) => {
 				"error": "Unknown"
 			}
 		);
+		next();
 	}
 };
 
@@ -99,16 +105,25 @@ module.exports.Login = async (req, res, next) => {
 			);
 		}
 	
-		const token = createSecretToken(user._id); // Create a JWT token using the user's ID and our key
+		const token = createSecretToken(user.id); // Create a JWT token using the user's ID and our key
+		const refreshToken = createRefreshToken(user.id); // Create a JWT refresh token
 		console.log("Login: token = %o", token);
-		res.cookie("token", token, {
-				withCredentials: true,
+		/*res.cookie("token", token, {
 				httpOnly: true,
-				secure: false,
+				secure: true,
+				sameSite: "none",
+				maxAge: 60 * 60
+			}
+		)*/
+		setTokenCookie(res, token);
+		/*.cookie("refreshToken", refreshToken, {
+				httpOnly: true,
+				secure: true,
 				sameSite: "none",
 				maxAge: 24 * 60 * 60
 			}
-		);
+		)*/
+		setRefreshCookie(res, refreshToken);
 		res.status(200)
 		.json(
 			{
@@ -128,6 +143,7 @@ module.exports.Login = async (req, res, next) => {
 				"error": "Unknown"
 			}
 		);
+		next();
 	}
 };
 
@@ -138,6 +154,7 @@ module.exports.Logout = async (req, res, next) => {
 	{
 		console.log("Logout: The user is logged in, logging them out");
 		res.clearCookie("token") // Clear the token cookie
+		.clearCookie("refreshToken") // Clear the refresh token
 		.status(200)
 		.json(
 			{
@@ -146,5 +163,111 @@ module.exports.Logout = async (req, res, next) => {
 		)
 		;
 		next();
+	}
+};
+
+module.exports.Refresh = async (req, res, next) => {
+	console.log("Refresh: request cookies: %o", req.cookies);
+	const refreshToken = req.cookies.refreshToken;
+
+	if (!refreshToken) // The user isn't logged in, because the refresh token lasts longer than the main JWT token
+	{
+		res.status(401)
+			.json(
+				{
+					loggedIn: false,
+					reason: "noRefresh"
+				}
+			);
+		next();
+	}
+
+	try
+	{
+		const decoded = jwt.verify(refreshToken, process.env.TOKEN_KEY); // Verify the refresh token
+		const accessToken = createSecretToken(decoded.id); // Create a new temporary secret token
+		/*res.cookie("token", accessToken, { // Set a new temporary access token cookie
+				httpOnly: true,
+				secure: true,
+				sameSite: "none",
+				maxAge: 60 * 60
+			}
+		)*/
+		setTokenCookie(res, accessToken);
+		res.status(200)
+		.json(
+			{
+				refreshed: true
+			}
+		);
+		next();
+	}
+
+	catch (e)
+	{
+		res.status(400)
+			.json(
+				{
+					loggedIn: false,
+					reason: "invalidRefresh"
+				}
+			);
+		next();
+	}
+};
+
+module.exports.IsLoggedIn = async (req, res, next) => {
+	console.log("IsLoggedIn: request cookies: %o", req.cookies);
+	const accessToken = req.cookies.token;
+	const refreshToken = req.cookies.refreshToken;
+
+	if (neitherTokenNorRefresh(accessToken, refreshToken))
+	{
+		/*res.status(200)
+		.json(
+			{
+				loggedIn: false
+			}
+		);*/
+		markAsNotLoggedIn(res, 200);
+		next();
+	}
+
+	try
+	{
+		reqUser = findReqUser(accessToken); // Try to find the request's user
+		// The user is logged in if we got here
+		/*res.status(200) // Tell the client what their username is, and that they're logged in
+		.json(
+			{
+				userName: reqUser.username,
+				loggedIn: true
+			}
+		);*/
+		markAsLoggedIn(res, reqUser, 200);
+		next();
+	}
+
+	catch (e) // Error with access token
+	{
+		if (!refreshToken) // They can't be logged in because they lack both a refresh token and an access token
+		{
+			markAsNotLoggedIn(res, 200);
+			next();
+		}
+
+		try
+		{
+			({refreshToken, accessToken } = genNewAccessToken(refreshToken, res)); // Create a new access token for them using their refresh token
+			reqUser = findReqUser(accessToken);
+			markAsLoggedIn(res, reqUser, 200);
+			next();
+		}
+
+		catch (e)
+		{
+			markAsNotLoggedIn(res, 200);
+			next();
+		}
 	}
 };

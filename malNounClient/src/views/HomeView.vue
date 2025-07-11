@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router";
 //import { computed } from "vue";
-import { BLink, BContainer, BRow, BCol, BButton } from "bootstrap-vue-next";
+import { BLink, BContainer, BRow, BCol, BButton, BAlert } from "bootstrap-vue-next";
 import { useUserStore } from "../stores/UserStore";
+import { useNounStore } from "../stores/NounStore";
 
 /*const store = useStore();
 const isLoggedIn = computed(() => store.state.loggedIn);
@@ -15,6 +16,9 @@ const userName = computed(() => store.state.userName);*/
 		Loading noun data...
 	</div>
 	<div v-else>
+		<BAlert v-if="userData.isLoggedIn && showLogoutAlert">
+			Successfully logged you out!
+		</BAlert>
 		<div v-if="userData.isLoggedIn">
 			<h1>Welcome, {{userData.getUserName}}</h1>
 			<h2>Editable list of nouns</h2>
@@ -98,32 +102,49 @@ export default {
 		return {
 			nouns: [],
 			loading: true,
-			userData: useUserStore()
+			userData: useUserStore(),
+			nounData: useNounStore(),
+			showLogoutAlert: false
 		};
 	},
 	methods: {
 		onCreate(e)
 		{
 			console.log("Redirecting to creation page...");
+			this.$router.push("/create");
 		},
 
 		onLogout(e)
 		{
-			console.log("Logging out...");
-			fetch("http://15.156.81.125:5000/auth/logout",
+			console.log("Logging out...\n\tUser data: %o\n\tUser API URL: %s", this.userData, this.userData.getUserAPIURL);
+			fetch(this.userData.getUserAPIURL + "/logout",
 				{
 					method: "POST",
 					credentials: "include"
 				}
 			)
 			.then(resp => resp.json())
-			.then(data => console.log("Logout data: %o", data));
+			.then(data => {
+				console.log("Logout data: %o", data);
+				
+				if (data.status == "loggedOut") // The logout operation was successful
+				{
+					console.log("Logging user out on the frontend...");
+					this.userData.logUserOut(); // Log the user out
+					this.showLogoutAlert = true; // Let the user know that they've been logged out
+					setTimeout(() => {
+						this.showLogoutAlert = false;
+						this.userData.logUserOut();
+						this.$router.push("/"); // Send them back to the home page, but as an anonymous user this time
+					}, 3000);
+				}
+			});
 		}
 	},
 	mounted()
 	{
-		console.log("Store object: %o", this.$store);
-		fetch("http://15.156.81.125:5000/api/nouns") // Get a list of all nouns
+		console.log("Store object: %o\n\tNoun store getter: %o", this.nounData, this.nounData.getNounAPIURL);
+		fetch(this.nounData.getNounAPIURL + "/nouns") // Get a list of all nouns
 		.then(resp => resp.json()) // Convert the noun list to JSON
 		.then(nouns => {
 			console.log(nouns);
