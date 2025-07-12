@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { setTokenCookie, setRefreshCookie } = require("../utils/SetCookies"); // Cookie setters
 const { neitherTokenNorRefresh, findReqUser, markAsNotLoggedIn, genNewAccessToken, markAsLoggedIn } = require("../utils/LoginInfoAndHandlers");
+const { validationResult } = require("express-validator");
 
 module.exports.Signup = async (req, res, next) => {
 	try
@@ -62,6 +63,8 @@ module.exports.Signup = async (req, res, next) => {
 };
 
 module.exports.Login = async (req, res, next) => {
+	const validationErrs = validationResult(req); // Result of validating body and email
+
 	try
 	{
 		console.log("Login: req.body = %o", req.body);
@@ -70,9 +73,30 @@ module.exports.Login = async (req, res, next) => {
 	
 		if (!email || !password) // Missing fields
 		{
-			return res.json(
+			return res.status(400)
+				.json(
 				{
 					"error": "All fields are required"
+				}
+			);
+		}
+
+		if (!validationErrs.isEmpty() && validationErrs.errors[0].param === "email") // Invalid email address
+		{
+			return res.status(400)
+			.json(
+				{
+					"error": "Invalid email"
+				}
+			);
+		}
+
+		if (!validationErrs.isEmpty() && validationErrs.errors[0].param === "password") // Invalid email address
+		{
+			return res.status(400)
+			.json(
+				{
+					"error": "Invalid password"
 				}
 			);
 		}
@@ -86,7 +110,8 @@ module.exports.Login = async (req, res, next) => {
 	
 		if (!user) // No such user
 		{
-			return res.json(
+			return res.status(400)
+				.json(
 				{
 					"error": "Incorrect password or email"
 				}
@@ -98,7 +123,8 @@ module.exports.Login = async (req, res, next) => {
 	
 		if (!auth)
 		{
-			return res.json(
+			return res.status(400)
+				.json(
 				{
 					"error": "Incorrect password or email"
 				}

@@ -72,7 +72,7 @@ module.exports.requireAuth = async function (req, res, next) {
 					loggedIn: false
 				}
 			);*/
-			markAsNotLoggedIn(res, 400);
+			markAsNotLoggedIn(res, 401);
 		}
 
 		try // Their access token has expired, but they still have a refresh token. So generate a new access token for them automatically.

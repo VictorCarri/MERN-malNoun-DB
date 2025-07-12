@@ -12,10 +12,15 @@ import { useUserStore } from "../stores/UserStore";
 		>
 			Successfully logged in, redirecting...
 		</BAlert>
+		<BAlert variant="danger" v-model="showServerErrorAlert">
+			{{ serverError }}
+		</BAlert>
 		<BContainer v-if="form.errors.length">
 			<BRow v-for="error in form.errors">
 				<BCol>
-					{{ error }}
+					<BAlert variant="danger">
+						{{ error }}
+					</BAlert>
 				</BCol>
 			</BRow>
 		</BContainer>
@@ -87,7 +92,9 @@ data() {
 			},
 			show: true,
 			showSuccessAlert: false,
-			store: useUserStore()
+			store: useUserStore(),
+			showServerErrorAlert: false,
+			serverError: ""
 		};
 	},
 	methods: {
@@ -224,6 +231,14 @@ data() {
 					else // Login error
 					{
 						console.error("Login error: %o", data);
+						this.showServerErrorAlert = true;
+						this.serverError = data.error;
+						setTimeout(() => {
+								this.showServerErrorAlert = false;
+								this.serverError = "";
+							},
+							4000
+						);
 					}
 				}
 			)
