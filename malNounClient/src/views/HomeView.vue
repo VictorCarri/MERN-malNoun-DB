@@ -68,8 +68,7 @@ const userName = computed(() => store.state.userName);*/
 					</BButton>
 				</BCol>
 				<BCol v-if="userData.isLoggedIn">
-					<BButton
-						variant="danger">
+					<BButton variant="danger">
 						Delete
 					</BButton>
 				</BCol>

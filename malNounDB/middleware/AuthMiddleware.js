@@ -10,7 +10,8 @@ module.exports.requireAuth = async function (req, res, next) {
 	const refreshToken = req.cookies.refreshToken; // Get the refresh token cookie
 	
 	//if (!token && !refreshToken) // No token or refresh token
-	if (neitherTokenNorRefresh(token, refreshToken))
+	//if (neitherTokenNorRefresh(token, refreshToken))
+	if (neitherTokenNorRefresh(req.cookies))
 	{
 		/*res.status(401)
 		.json(

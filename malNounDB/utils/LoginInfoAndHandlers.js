@@ -3,8 +3,9 @@ const User = require("../models/user");
 const { createSecretToken, createRefreshToken } = require("./SecretToken");
 const { setTokenCookie, setRefreshCookie } = require("./SetCookies");
 
-module.exports.neitherTokenNorRefresh = (accessCookie, refreshCookie) => {
-	return !accessCookie && !refreshCookie;
+module.exports.neitherTokenNorRefresh = (cookies) => {
+	console.log("neitherTokenNorRefresh: cookies = %o\n\t\"token\" in cookies: %o\n\t\"refreshToken\" in cookies: %o\nFull expression: %o", cookies, "token" in cookies, "refreshToken" in cookies, !("token" in cookies) && !("refreshToken" in cookies));
+	return !("token" in cookies) && !("refreshToken" in cookies);
 };
 
 module.exports.findReqUser = async (accessToken) => {

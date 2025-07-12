@@ -4,7 +4,7 @@ module.exports.setTokenCookie = (res, token) => {
 			withCredentials: true,
 			httpOnly: true,
 			sameSite: "none",
-			maxAge: 60 * 60,
+			maxAge: 60 * 60 * 1000,
 			secure: true
 		}
 	);
@@ -16,7 +16,7 @@ module.exports.setRefreshCookie = (res, refreshToken) => {
 			httpOnly: true,
 			secure: true,
 			sameSite: "none",
-			maxAge: 24 * 60 * 60,
+			maxAge: 24 * 60 * 60 * 1000,
 			withCredentials: true
 		}
 	)

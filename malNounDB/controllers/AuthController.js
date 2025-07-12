@@ -222,8 +222,9 @@ module.exports.IsLoggedIn = async (req, res, next) => {
 	const accessToken = req.cookies.token;
 	const refreshToken = req.cookies.refreshToken;
 
-	if (neitherTokenNorRefresh(accessToken, refreshToken))
+	if (neitherTokenNorRefresh(req.cookies))
 	{
+		console.log("IsLoggedIn: the user has neither a \"token\" cookie nor a \"refresh\" cookie");
 		/*res.status(200)
 		.json(
 			{
@@ -234,41 +235,44 @@ module.exports.IsLoggedIn = async (req, res, next) => {
 		next();
 	}
 
-	try
+	else
 	{
-		reqUser = findReqUser(accessToken); // Try to find the request's user
-		// The user is logged in if we got here
-		/*res.status(200) // Tell the client what their username is, and that they're logged in
-		.json(
-			{
-				userName: reqUser.username,
-				loggedIn: true
-			}
-		);*/
-		markAsLoggedIn(res, reqUser, 200);
-		next();
-	}
-
-	catch (e) // Error with access token
-	{
-		if (!refreshToken) // They can't be logged in because they lack both a refresh token and an access token
-		{
-			markAsNotLoggedIn(res, 200);
-			next();
-		}
-
 		try
 		{
-			({refreshToken, accessToken } = genNewAccessToken(refreshToken, res)); // Create a new access token for them using their refresh token
-			reqUser = findReqUser(accessToken);
+			reqUser = findReqUser(accessToken); // Try to find the request's user
+			// The user is logged in if we got here
+			/*res.status(200) // Tell the client what their username is, and that they're logged in
+			.json(
+				{
+					userName: reqUser.username,
+					loggedIn: true
+				}
+			);*/
 			markAsLoggedIn(res, reqUser, 200);
 			next();
 		}
-
-		catch (e)
+	
+		catch (e) // Error with access token
 		{
-			markAsNotLoggedIn(res, 200);
-			next();
+			if (!refreshToken) // They can't be logged in because they lack both a refresh token and an access token
+			{
+				markAsNotLoggedIn(res, 200);
+				next();
+			}
+	
+			try
+			{
+				({refreshToken, accessToken } = genNewAccessToken(refreshToken, res)); // Create a new access token for them using their refresh token
+				reqUser = findReqUser(accessToken);
+				markAsLoggedIn(res, reqUser, 200);
+				next();
+			}
+	
+			catch (e)
+			{
+				markAsNotLoggedIn(res, 200);
+				next();
+			}
 		}
 	}
 };

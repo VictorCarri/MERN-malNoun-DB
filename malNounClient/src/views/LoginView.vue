@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BForm, BFormGroup, BFormInput, BButton, BAlert } from "bootstrap-vue-next";
+import { BForm, BFormGroup, BFormInput, BButton, BAlert, BRow, BCol, BContainer, BFormInvalidFeedback } from "bootstrap-vue-next";
 import { reactive, ref } from "vue";
 import { useUserStore } from "../stores/UserStore";
 </script>
@@ -12,7 +12,14 @@ import { useUserStore } from "../stores/UserStore";
 		>
 			Successfully logged in, redirecting...
 		</BAlert>
-		<BForm v-if="show" @submit="onLogin" @reset="onReset">
+		<BContainer v-if="form.errors.length">
+			<BRow v-for="error in form.errors">
+				<BCol>
+					{{ error }}
+				</BCol>
+			</BRow>
+		</BContainer>
+		<BForm v-if="show" @submit="onLogin" @reset="onReset" @input="formIsValid">
 			<BFormGroup
 				id="emailInpGroup"
 				label="Email:"
@@ -25,7 +32,12 @@ import { useUserStore } from "../stores/UserStore";
 					type="email"
 					placeholder="email@email.com"
 					required
+					novalidate
+					:state="form.emailState"
 				/>
+				<BFormInvalidFeedback>
+					You must enter a valid email
+				</BFormInvalidFeedback>
 			</BFormGroup>
 
 			<BFormGroup
@@ -40,6 +52,7 @@ import { useUserStore } from "../stores/UserStore";
 					type="password"
 					placeholder="Enter your password"
 					required
+					:state="form.passwordState"
 				/>
 			</BFormGroup>
 
@@ -66,8 +79,11 @@ export default {
 data() {
 		return {
 			form: {
-				email: "",
-				password: ""
+				email: null,
+				password: null,
+				errors: [],
+				emailState: false,
+				passwordState: false
 			},
 			show: true,
 			showSuccessAlert: false,
@@ -75,9 +91,101 @@ data() {
 		};
 	},
 	methods: {
+		emailIsValid(email)
+		{
+			 var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		      let toReturn = re.test(email);
+			console.log("emailIsValid: toReturn = %o", toReturn);
+			return toReturn;
+		},
+
+		formIsValid()
+		{
+			console.log("formIsValid called\n\tthis.form = %o", this.form);
+			this.form.errors = []; // Reset validation errors on call
+
+			/*if (this.form.email && this.form.password) // The user has entered something for both
+			{
+				if (this.emailIsValid(this.form.email)) // The email is valid
+				{
+					this.form.emailState = true; // Mark the input field as valid
+					return true; // The form is valid
+				}
+
+				else // The email is invalid
+				{
+					this.form.emailState = false;
+					this.form.errors.push("Your email is invalid");
+					return false;
+				}
+			}
+
+			else // The user has not entered one of the 2
+			{
+				if (!this.form.email)
+				{
+					this.form.emailState = false;
+					this.form.errors.push("Email required");
+				}
+
+				if (!this.form.password)
+				{
+					this.form.errors.push("Password required");
+				}
+
+				return false; // The form is invalid
+			}*/
+
+			if (this.form.email) // The user has entered their email
+			{
+				/* Validate their email */
+				if (this.emailIsValid(this.form.email)) // Their email is valid
+				{
+					this.form.emailState = true; // Mark the email input field as valid
+
+					if (this.form.password) // The user has entered a password
+					{
+						this.form.passwordState = true;
+						// The user has entered a valid email and a password
+						return true; // The entire form is valid
+					}
+
+					else // The user hasn't entered a password
+					{
+						this.form.errors.push("Password required.");
+						this.form.passwordState = false;
+						return false;
+					}
+				}
+
+				else // Their email is invalid
+				{
+					this.form.emailState = false;
+					this.form.passwordState = true;
+					this.form.errors.push("Your email is invalid.");
+					return false;
+				}
+			}
+
+			else // No email
+			{
+				this.form.emailState = false;
+				this.form.passwordState = true;
+				this.form.errors.push("Email required");
+				return false;
+			}
+		},
+
 		onLogin(e)
 		{
 			e.preventDefault();
+			console.log("onLogin: formIsValid = %o", this.formIsValid());
+			
+			if (!this.formIsValid()) // The form is invalid
+			{
+				return false; // Stop
+			}
+
 			console.log("Logging in...\nPinia store = %o\nUser API URL = %s", this.store, this.store.getUserAPIURL);
 			fetch(this.store.getUserAPIURL + "/login",
 			//fetch("http://15.156.81.125:5000/auth/login",
@@ -130,8 +238,8 @@ data() {
 			e.preventDefault();
 
 			/* Reset form values */
-			this.form.email = "";
-			this.form.password = "";
+			this.form.email = null
+			this.form.password = null
 
 			/* Trick to reset/clear native browser form validation state */
 			this.show = false;
