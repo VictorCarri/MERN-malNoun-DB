@@ -16,7 +16,7 @@ const userName = computed(() => store.state.userName);*/
 		Loading noun data...
 	</div>
 	<div v-else>
-		<BAlert v-if="userData.isLoggedIn && showLogoutAlert">
+		<BAlert v-if="showLogoutAlert">
 			Successfully logged you out!
 		</BAlert>
 		<div v-if="userData.isLoggedIn">

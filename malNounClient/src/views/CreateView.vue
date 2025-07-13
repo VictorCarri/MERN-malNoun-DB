@@ -155,9 +155,7 @@ export default {
 					headers: {
 						"Content-Type": "application/json"
 					},
-					body: JSON.stringify(
-						}
-					)
+					body: JSON.stringify(nounData)
 				}
 			);*/
 		},
@@ -171,8 +169,9 @@ export default {
 				isAnimate: false,
 				gender: "",
 				isHuman: false,
-				nounText: ""
-			};
+				nounText: "",
+				errors: []
+			},
 
 			/* Trick to reset/clear native browser form validation state */
 			this.showForm = false;

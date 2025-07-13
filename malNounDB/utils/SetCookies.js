@@ -1,10 +1,12 @@
+const { maxTokenAge, maxRefreshTokenAge } = require("../config.js"); // Maximum token ages
+
 /* Set a token cookie upon login/refresh */
 module.exports.setTokenCookie = (res, token) => {
 	res.cookie("token", token, {
 			withCredentials: true,
 			httpOnly: true,
 			sameSite: "none",
-			maxAge: 60 * 60 * 1000,
+			maxAge: maxTokenAge,
 			secure: true
 		}
 	);
@@ -16,7 +18,7 @@ module.exports.setRefreshCookie = (res, refreshToken) => {
 			httpOnly: true,
 			secure: true,
 			sameSite: "none",
-			maxAge: 24 * 60 * 60 * 1000,
+			maxAge: maxRefreshTokenAge,
 			withCredentials: true
 		}
 	)

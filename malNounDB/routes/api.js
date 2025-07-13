@@ -1,83 +1,91 @@
-// Import Express and create a router
+/* Imports */
 const express = require("express");
 const router = express.Router();
-const Noun = require("../models/noun.js"); // Noun model
 const { requireAuth } = require("../middleware/AuthMiddleware"); // Authentication middleware
+const { GetAll, CreateNoun, DeleteNoun, UpdateNoun } = require("../controllers/NounController.js"); // Noun controller that responds to routes
+const { bodyParser, jsonValidator, validateMalayalam, validateGender } = require("../middleware/FormMiddleware.js"); // To validate the body as JSON, then parse the JSON into body properties
 
-// GET all nouns
-router.get("/nouns", (req, res, next) => {
-		// Return all nouns as a JSON array
-		Noun.find({}) // Get all nouns
-		.then(data => res.json(data)) // Convert the data to JSON
-		.catch(next); // Handle errors
-	}
-);
+/* Validation setup */
 
-// POST to create a new noun entry
-router.post("/nouns", requireAuth, (req, res, next) => {
-		if (req.body.singular)
-		{
-			Noun.create(req.body) // Create a new noun
-			.then(data => res.json(data)) // Convert the data to JSON
-			.catch(next); // Handle errors
-		}
+/* Route setup */
+router.get("/nouns", GetAll); // GET all nouns
 
-		else // Error
-		{
-			res.json(
-				{
-					error: "The singular field is empty"
-				}
-			);
-		}
-	}
-);
+/*
+* To create a noun, we need to:
+* 
+* 1) Ensure that the user is authorized to access this route.
+* 2) Ensure that the body contains valid JSON.
+* 3) Parse the JSON into the body.
+* 4) Ensure that the "singular" parameter:
+*	a) Is present.
+*	b) Has at least 1 character.
+*	c) Contains valid Malayalam unicode.
+* 5) For each of the Boolean parameters:
+*	a) Validate that:
+*		i) They're present.
+*		ii) Their value can be converted to a Boolean.
+* 6) Validate that the gender parameter:
+*	a) Is present.
+*	b) Is a string.
+*	c) Passes a custom validator that ensures that the string is one of "masculine", "feminine", or "neuter" (case-insensitive).
+* 7) Validates that the plural parameter:
+*	a) MAY be present.
+*	b) Exists.
+*	c) Is a string.
+*	d) Has at least 1 UTF-16 codepoint.
+*	e) Has only Malayalam UTF-16 codepoints.
+* 8) Call the CreateNoun controller method.
+*/
+const singularValidator = body("singular").exists().isString().isLength({min: 1}).custom(validateMalayalam);
+const humanValidator = body("human").exists().isBoolean();
+const animateValidator = body("animate").exists().isBoolean();
+const genderValidator = body("gender").exists().isString().toLowerCase().custom(validateGender);
+const pluralValidator = body("plural").optional().exists().isString().isLength({min: 1}).custom(validateMalayalam);
+router.post("/nouns", requireAuth, jsonValidator, bodyParser, singularValidator, humanValidator, animateValidator, genderValidator, pluralValidator, CreateNoun); // POST to create a new noun entry
 
-// DELETE a noun by ID
-router.delete("/nouns/:id", requireAuth, (req, res, next) => {
-		Noun.findOneAndDelete(
-			{
-				"_id": req.params.id // ID of the noun to delete
-			}
-		)
-		.then(data => res.json(data))
-		.catch(next);
-	}
-);
+/*
+* To delete a noun, we need to:
+*
+* 1) Ensure that the user is authorized to access this route.
+* 2) Ensure that the body contains valid JSON.
+* 3) Parse the JSON into the body.
+* 4) Ensure that the request's "id" parameter:
+*	a) Is present.
+*	b) Has at least 1 character.
+*/
+const idValidator = body("id").exists().isString().isLength({min: 1});
+router.delete("/nouns/:id", requireAuth, jsonValidator, bodyParser, idValidator, DeleteNoun); // DELETE a noun by ID
 
-// PATCH a noun by ID
-router.patch("/nouns/:id", requireAuth, (req, res, next) => {
-		console.log("PATCH\n\tNoun ID: %o\n\tReq body: %o", req.params.id, req.body);
-		Noun.findByIdAndUpdate(
-			req.params.id,
-			req.body,
-			{
-				new: true,
-				runValidators: true
-			}
-		)
-		.then(updatedNoun => {
-				console.log("PATCH\n\tUpdated noun = %o", updatedNoun);
-		
-				if (!updatedNoun)
-				{
-					console.log("PATCH\n\tNoun not found");
-					return res.status(404).json(
-						{
-							error: "Noun not found"
-						}
-					);
-				}
+/*
+* To update a noun, we need to:
+*
+* 1) Ensure that the user is authorized to access this route.
+* 2) Ensure that the body contains valid JSON.
+* 3) Parse the JSON into the body.
+* 4) Ensure that the request's "id" parameter:
+*	a) Is present.
+*	b) Has at least 1 character.
+* 5) Ensure that the "singular" parameter:
+*	a) Is present.
+*	b) Has at least 1 character.
+*	c) Contains valid Malayalam unicode.
+* 6) For each of the Boolean parameters:
+*	a) Validate that:
+*		i) They're present.
+*		ii) Their value can be converted to a Boolean.
+* 7) Validate that the gender parameter:
+*	a) Is present.
+*	b) Is a string.
+*	c) Passes a custom validator that ensures that the string is one of "masculine", "feminine", or "neuter" (case-insensitive).
+* 8) Validates that the plural parameter:
+*	a) MAY be present.
+*	b) Exists.
+*	c) Is a string.
+*	d) Has at least 1 UTF-16 codepoint.
+*	e) Has only Malayalam UTF-16 codepoints.
+* 9) Call the UpdateNoun controller method.
+*/
+router.patch("/nouns/:id", requireAuth, jsonValidator, bodyParser, idValidator, singularValidator, humanValidator, animateValidator, genderValidator, pluralValidator, UpdateNoun); // PATCH a noun by ID
 
-				else // Send the updated document back as the response
-				{
-					return res.json(updatedNoun);
-				}
-			}
-		)
-		.catch(next);
-	}
-);
-
-// Export the router
-module.exports = router;
+/* Exports */
+module.exports = router; // Export the router

@@ -9,7 +9,8 @@ const { validationResult } = require("express-validator");
 module.exports.Signup = async (req, res, next) => {
 	try
 	{
-		const { email, password, username, createdAt } = req.body;
+		//const { email, password, username, createdAt } = req.body;
+		const { email, password, userName } = req.body;
 		console.log("Signup: request body = %o", req.body);
 		const existingUser = await User.findOne({ email });
 		console.log("Signup: existingUser = %o", existingUser);
@@ -23,7 +24,8 @@ module.exports.Signup = async (req, res, next) => {
 			);
 		}
 	
-		const user = await User.create({email, password, username, createdAt});
+		//const user = await User.create({email, password, username, createdAt});
+		const user = await User.create({email, password, userName});
 		console.log("Signup: user = %o", user);
 		const token = createSecretToken(user.id);
 		console.log("Signup: token = %o", token);
@@ -68,21 +70,10 @@ module.exports.Login = async (req, res, next) => {
 	try
 	{
 		console.log("Login: req.body = %o", req.body);
-		const { email, password } = req.body;
-		console.log("Login: email = %o\n\tpassword = %o", email, password);
-	
-		if (!email || !password) // Missing fields
-		{
-			return res.status(400)
-				.json(
-				{
-					"error": "All fields are required"
-				}
-			);
-		}
 
 		if (!validationErrs.isEmpty() && validationErrs.errors[0].param === "email") // Invalid email address
 		{
+			console.log("Login: email is invalid");
 			return res.status(400)
 			.json(
 				{
@@ -93,10 +84,24 @@ module.exports.Login = async (req, res, next) => {
 
 		if (!validationErrs.isEmpty() && validationErrs.errors[0].param === "password") // Invalid email address
 		{
+			console.log("Login: password is invalid");
 			return res.status(400)
 			.json(
 				{
 					"error": "Invalid password"
+				}
+			);
+		}
+
+		const { email, password } = req.body;
+		console.log("Login: email = %o\n\tpassword = %o", email, password);
+	
+		if (!email || !password) // Missing fields
+		{
+			return res.status(400)
+				.json(
+				{
+					"error": "All fields are required"
 				}
 			);
 		}

@@ -1,6 +1,6 @@
 // Importing dependencies
 const express = require('express'); // Express
-const bodyParser = require("body-parser");
+//const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const routes = require("./routes/api");
 const path = require("path");
@@ -33,7 +33,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions)); // Enable pre-flight requests for all routes
-app.use(bodyParser.json());
+//app.use(bodyParser.json()); // Don't globally parse the request body as JSON before validating it
 
 /* Cookies */
 app.use(cookieParser());

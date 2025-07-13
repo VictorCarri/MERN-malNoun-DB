@@ -47,7 +47,7 @@ const router = createRouter(
 router.beforeEach(async (to, from) => {
 		console.log("router.beforeEach called.\n\tto = %o\n\tfrom = %o", to, from);
 
-		if (to.meta.requiresAuth)// The user is trying to access a protected route
+		if (to.meta.requiresAuth || to.meta.optionalAuth)// The user is trying to access a protected route or a route that optionally displays protected content
 		{
 			console.log("You're trying to access a protected route.");
 	
@@ -73,7 +73,15 @@ router.beforeEach(async (to, from) => {
 	
 				else // The user isn't logged in
 				{
-					return { name: "Login" }; // Redirect the user to the login page
+					if (to.meta.requiresAuth) // Only redirect the user if he/she's trying to access a page that *requires* authentication
+					{
+						return { name: "Login" }; // Redirect the user to the login page
+					}
+	
+					else // They're trying to access a page that doesn't *require* authentication
+					{
+						return true; // Let them through
+					}
 				}
 			}
 
@@ -83,7 +91,13 @@ router.beforeEach(async (to, from) => {
 				return false; // Return the user to the previous page
 			}
 		}
+
+		else // They're trying to access an unprotected route
+		{
+			return true; // Let them through
+		}
 	}
+
 );
 
 export default router;
