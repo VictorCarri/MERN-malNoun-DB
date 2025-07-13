@@ -12,7 +12,7 @@ module.exports.findReqUser = async (accessToken) => {
 	const decodedAccessToken = jwt.verify(accessToken, process.env.TOKEN_KEY);
 	const reqUser = await User.findById(decodedAccessToken.id);
 	return reqUser;
-};
+
 
 module.exports.markAsNotLoggedIn = (res, status) => {
 	res.status(status)
