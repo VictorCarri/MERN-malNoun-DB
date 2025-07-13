@@ -75,12 +75,12 @@ const userName = computed(() => store.state.userName);*/
 			</BRow>
 			<BRow v-if="userData.isLoggedIn">
 				<BCol>
-					<BButton @click="onCreate">
+					<BButton @click.prevent="onCreate">
 						Add a new noun
 					</BButton>
 				</BCol>
 				<BCol>
-					<BButton @click="onLogout">
+					<BButton @click.prevent="onLogout">
 						Logout
 					</BButton>
 				</BCol>

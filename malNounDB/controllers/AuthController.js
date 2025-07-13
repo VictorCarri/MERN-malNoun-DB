@@ -250,8 +250,6 @@ module.exports.Refresh = async (req, res, next) => {
 
 module.exports.IsLoggedIn = async (req, res, next) => {
 	console.log("IsLoggedIn: request cookies: %o", req.cookies);
-	const accessToken = req.cookies.token;
-	const refreshToken = req.cookies.refreshToken;
 
 	if (neitherTokenNorRefresh(req.cookies))
 	{
@@ -270,7 +268,8 @@ module.exports.IsLoggedIn = async (req, res, next) => {
 	{
 		try
 		{
-			reqUser = findReqUser(accessToken); // Try to find the request's user
+			const accessToken = req.cookies.token;
+			reqUser = await findReqUser(accessToken); // Try to find the request's user
 			// The user is logged in if we got here
 			/*res.status(200) // Tell the client what their username is, and that they're logged in
 			.json(
@@ -285,6 +284,8 @@ module.exports.IsLoggedIn = async (req, res, next) => {
 	
 		catch (e) // Error with access token
 		{
+			const refreshToken = req.cookies.refreshToken;
+
 			if (!refreshToken) // They can't be logged in because they lack both a refresh token and an access token
 			{
 				markAsNotLoggedIn(res, 200);

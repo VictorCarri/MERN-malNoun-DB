@@ -1,7 +1,7 @@
 const { body } = require("express-validator"); // body validator
 const bodyParserCreator = require("body-parser");
 
-module.exports.bodyParser = bodyParserCreator(); // Body parser used across routes
+module.exports.bodyParser = bodyParserCreator.json(); // JSON Body parser used across routes
 module.exports.jsonValidator = body().isJSON(); // Validates the entire body as JSON
 
 /*

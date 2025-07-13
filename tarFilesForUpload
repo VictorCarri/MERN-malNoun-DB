@@ -1,0 +1,32 @@
+#!/bin/bash -xv
+
+ourName="`basename \"$0\"`"
+serverFileTarName=malNounDB.tgz
+
+RM_SERVER_FAILED=1
+TAR_SERVER_FAILED=2
+
+# Tar the server files for upload
+
+if [[ -f $serverFileTarName ]] # The previous version of the server tar file still exists
+then
+	rm malNounDB.tgz # Remove it
+	rmEx=$?
+
+	if ! [[ $rmEx -eq 0 ]] # rm error
+	then
+		echo ${ourName}: couldn\'t remove old server tar file. 
+		echo -e '\t' rm exited with code $rmEx
+		exit $RM_SERVER_FAILED
+	fi
+fi
+
+tar cvfz $serverFileTarName ./malNounDB # Tar the server files
+tarEx=$?
+
+if ! [[ $tarEx -eq 0 ]] # Tar error
+then
+	echo ${ourName}: couldn\'t tar the server files.
+	echo -e '\t' tar exited with code $tarEx
+	exit $TAR_SERVER_FAILED
+fi

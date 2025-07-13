@@ -25,8 +25,7 @@ module.exports.CreateNoun = (req, res, next) => {
 			}
 		);
 	}
-}
-);
+};
 
 /* Delete a noun from the DB */
 module.exports.DeleteNoun = (req, res, next) => {
@@ -38,39 +37,38 @@ module.exports.DeleteNoun = (req, res, next) => {
 	.then(data => res.json(data))
 	.catch(next);
 	return res.status(200);
-}
+};
 
 /* Update a noun in the DB */
 module.exports.UpdateNoun = (req, res, next) => {
-		console.log("UpdateNoun\n\tNoun ID: %o\n\tReq body: %o", req.params.id, req.body);
-		Noun.findByIdAndUpdate(
-			req.params.id,
-			req.body,
+	console.log("UpdateNoun\n\tNoun ID: %o\n\tReq body: %o", req.params.id, req.body);
+	Noun.findByIdAndUpdate(
+		req.params.id,
+		req.body,
+		{
+			new: true,
+			runValidators: true
+		}
+	)
+	.then(updatedNoun => {
+			console.log("PATCH\n\tUpdated noun = %o", updatedNoun);
+	
+			if (!updatedNoun)
 			{
-				new: true,
-				runValidators: true
+				console.log("PATCH\n\tNoun not found");
+				return res.status(404).json(
+					{
+						error: "Noun not found"
+					}
+				);
 			}
-		)
-		.then(updatedNoun => {
-				console.log("PATCH\n\tUpdated noun = %o", updatedNoun);
-		
-				if (!updatedNoun)
-				{
-					console.log("PATCH\n\tNoun not found");
-					return res.status(404).json(
-						{
-							error: "Noun not found"
-						}
-					);
-				}
 
-				else // Send the updated document back as the response
-				{
-					return res.status(200)
-					.json(updatedNoun);
-				}
+			else // Send the updated document back as the response
+			{
+				return res.status(200)
+				.json(updatedNoun);
 			}
-		)
-		.catch(next);
-	}
-);
+		}
+	)
+	.catch(next);
+};

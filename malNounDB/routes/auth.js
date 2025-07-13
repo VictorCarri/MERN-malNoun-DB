@@ -4,8 +4,8 @@ const { body } = require("express-validator");
 const { bodyParser, jsonValidator } = require("../middleware/FormMiddleware"); // Common form middleware
 
 const emailValidator = body("email").exists().isEmail();
-const passwordValidator = body("password").exists().isLength({min: 1});
-const userNameValidator = body("userName").exists().isLength({min: 1});
+const passwordValidator = body("password").exists().isString().isLength({min: 1});
+const userNameValidator = body("userName").exists().isString().isLength({min: 1});
 
 /*
 * General order of middleware:

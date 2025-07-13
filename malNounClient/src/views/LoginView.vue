@@ -24,7 +24,7 @@ import { useUserStore } from "../stores/UserStore";
 				</BCol>
 			</BRow>
 		</BContainer>
-		<BForm v-if="show" @submit="onLogin" @reset="onReset" @input="formIsValid">
+		<BForm v-if="show" @submit.prevent="onLogin" @reset.prevent="onReset" @input.prevent="formIsValid">
 			<BFormGroup
 				id="emailInpGroup"
 				label="Email:"
@@ -185,7 +185,7 @@ data() {
 
 		onLogin(e)
 		{
-			e.preventDefault();
+			//e.preventDefault();
 			console.log("onLogin: formIsValid = %o", this.formIsValid());
 			
 			if (!this.formIsValid()) // The form is invalid
@@ -250,7 +250,7 @@ data() {
 
 		onReset(e)
 		{
-			e.preventDefault();
+			//e.preventDefault();
 
 			/* Reset form values */
 			this.form.email = null

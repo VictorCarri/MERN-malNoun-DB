@@ -4,6 +4,7 @@ const router = express.Router();
 const { requireAuth } = require("../middleware/AuthMiddleware"); // Authentication middleware
 const { GetAll, CreateNoun, DeleteNoun, UpdateNoun } = require("../controllers/NounController.js"); // Noun controller that responds to routes
 const { bodyParser, jsonValidator, validateMalayalam, validateGender } = require("../middleware/FormMiddleware.js"); // To validate the body as JSON, then parse the JSON into body properties
+const { body } = require("express-validator"); // Main body validator creator function
 
 /* Validation setup */
 

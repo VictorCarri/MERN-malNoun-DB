@@ -29,7 +29,7 @@ import { useNounStore } from "../stores/NounStore";
 				</li>
 			</ul>
 		</BRow>
-		<BForm v-if="showForm" @submit="onCreateNoun" @reset="onReset">
+		<BForm v-if="showForm" @submit.prevent="onCreateNoun" @reset.prevent="onReset">
 			<BRow>
 				<BFormGroup
 					id="animacyInpGroup"
@@ -139,7 +139,7 @@ export default {
 	methods: {
 		onCreateNoun(e)
 		{
-			e.preventDefault();
+			//e.preventDefault();
 			console.log("Creating a noun...");
 			const nounData = {
 				"singular": this.form.nounText,
@@ -162,7 +162,7 @@ export default {
 
 		onReset(e)
 		{
-			e.preventDefault();
+			//e.preventDefault();
 			
 			/* Reset form values */
 			this.form = {
