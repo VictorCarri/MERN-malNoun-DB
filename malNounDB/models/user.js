@@ -1,7 +1,8 @@
 const { nounsConn, usersConn } = require("../conns.js");
 const bcrypt = require("bcryptjs");
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+/*const mongoose = require("mongoose");
+const Schema = mongoose.Schema;*/
+const Schema = usersConn.Schema; // Use the Schema constructor from the right connection
 
 const userSchema = new Schema(
 	{

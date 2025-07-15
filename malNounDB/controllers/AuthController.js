@@ -269,6 +269,7 @@ module.exports.IsLoggedIn = async (req, res, next) => {
 		try
 		{
 			const accessToken = req.cookies.token;
+			console.log("IsLoggedIn: the user's access token is %o", accessToken);
 			reqUser = await findReqUser(accessToken); // Try to find the request's user
 			// The user is logged in if we got here
 			/*res.status(200) // Tell the client what their username is, and that they're logged in
@@ -279,30 +280,38 @@ module.exports.IsLoggedIn = async (req, res, next) => {
 				}
 			);*/
 			markAsLoggedIn(res, reqUser, 200);
+			console.log("IsLoggedIn: marked the user as logged in");
 			next();
 		}
 	
 		catch (e) // Error with access token
 		{
 			const refreshToken = req.cookies.refreshToken;
+			console.log("IsLoggedIn: the user's access token has a problem. Their refresh token is %o", refreshToken);
 
 			if (!refreshToken) // They can't be logged in because they lack both a refresh token and an access token
 			{
+				console.log("IsLoggedIn: the user can't be logged in because they lack both an access token and a refresh token.");
 				markAsNotLoggedIn(res, 200);
 				next();
 			}
 	
 			try
 			{
-				({refreshToken, accessToken } = genNewAccessToken(refreshToken, res)); // Create a new access token for them using their refresh token
-				reqUser = findReqUser(accessToken);
+				({newRefreshToken, newAccessToken } = await genNewAccessToken(refreshToken, res)); // Create a new access token for them using their refresh token
+				console.log("IsLoggedIn: new refresh token = %o\n\tNew access token = %o", newRefreshToken, newAccessToken);
+				reqUser = await findReqUser(newAccessToken);
+				console.log("IsLoggedIn: request user in catch: %o", reqUser);
 				markAsLoggedIn(res, reqUser, 200);
+				console.log("IsLoggedIn: marked the user as logged in when they only had a refresh token.");
 				next();
 			}
 	
 			catch (e)
 			{
+				console.log("IsLoggedIn: error with both tokens\n\tCaught error = %o", e);
 				markAsNotLoggedIn(res, 200);
+				console.log("IsLoggedIn: marked the user as not logged in.");
 				next();
 			}
 		}

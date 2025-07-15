@@ -5,17 +5,18 @@ module.exports.GetAll = (req, res, next) => {
 	// Return all nouns as a JSON array
 	Noun.find({}) // Get all nouns
 	.then(data => res.json(data)) // Convert the data to JSON
-	.catch(next); // Handle errors
+	.catch(next) // Handle errors
+	.finally(next);
 };
 
 /* Create a new noun entry in the DB */
 module.exports.CreateNoun = (req, res, next) => {
-	if (req.body.singular)
-	{
+/*	if (req.body.singular)
+	{*/
 		Noun.create(req.body) // Create a new noun
 		.then(data => res.json(data)) // Convert the data to JSON
 		.catch(next); // Handle errors
-	}
+	/*}
 
 	else // Error
 	{
@@ -24,7 +25,7 @@ module.exports.CreateNoun = (req, res, next) => {
 				error: "The singular field is empty"
 			}
 		);
-	}
+	}*/
 };
 
 /* Delete a noun from the DB */
@@ -34,9 +35,10 @@ module.exports.DeleteNoun = (req, res, next) => {
 			"_id": req.params.id // ID of the noun to delete
 		}
 	)
-	.then(data => res.json(data))
-	.catch(next);
-	return res.status(200);
+	.then(data => res.status(200).json(data))
+	.catch(next)
+	.finally(next);
+	//return res.status(200);
 };
 
 /* Update a noun in the DB */
@@ -56,7 +58,7 @@ module.exports.UpdateNoun = (req, res, next) => {
 			if (!updatedNoun)
 			{
 				console.log("PATCH\n\tNoun not found");
-				return res.status(404).json(
+				/*return*/res.status(404).json(
 					{
 						error: "Noun not found"
 					}
@@ -65,10 +67,11 @@ module.exports.UpdateNoun = (req, res, next) => {
 
 			else // Send the updated document back as the response
 			{
-				return res.status(200)
+				/*return*/ res.status(200)
 				.json(updatedNoun);
 			}
 		}
 	)
-	.catch(next);
+	.catch(next)
+	.finally(next);
 };

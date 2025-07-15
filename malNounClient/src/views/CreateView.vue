@@ -137,6 +137,11 @@ export default {
 		};
 	},
 	methods: {
+		validateForm()
+		{
+			// TODO: write code to validate the input
+		},
+
 		onCreateNoun(e)
 		{
 			//e.preventDefault();
