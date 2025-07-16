@@ -75,7 +75,7 @@ const userName = computed(() => store.state.userName);*/
 					</ol>
 				</BCol>
 				<BCol v-if="userData.isLoggedIn">
-					<BButton>
+					<BButton @click="onEdit">
 						Edit
 					</BButton>
 				</BCol>
@@ -123,6 +123,12 @@ export default {
 		{
 			console.log("Redirecting to creation page...");
 			this.$router.push("/create");
+		},
+
+		onEdit(e)
+		{
+			console.log("Redirecting you to the editing page...");
+			this.$router.push("/edit");
 		},
 
 		onLogout(e)

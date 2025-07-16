@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import HomeView from "../views/HomeView.vue";
 import CreateView from "../views/CreateView.vue";
+import EditView from "../views/EditView.vue";
+
 import { useUserStore } from "../stores/UserStore";
 
 /* Route def'ns */
@@ -21,7 +23,8 @@ const routeArr = [
 		name: "Login",
 		component: LoginView,
 		meta: {
-			requiresAuth: false
+			requiresAuth: false,
+			optionalAuth: false
 		}
 	},
 	
@@ -30,7 +33,18 @@ const routeArr = [
 		name: "Create a noun",
 		component: CreateView,
 		meta: {
-			requiresAuth: true
+			requiresAuth: true,
+			optionalAuth: false
+		}
+	},
+
+	{
+		path: "/edit",
+		name: "Edit",
+		component: EditView,
+		meta: {
+			requiresAuth: true,
+			optionalAuth: false
 		}
 	}
 ];
