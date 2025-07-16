@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useUserStore } from "../stores/UserStore";
 import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton } from "bootstrap-vue-next";
-import { watch } from "vue";
 import { useNounStore } from "../stores/NounStore";
 import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
 </script>
@@ -96,7 +95,7 @@ import MeaningsList from "../components/MeaningsList.vue"; // Custom component t
 					/>
 				</BFormGroup>
 			</BRow>
-			<MeaningsList />
+			<meanings-list @meanings-list-changed="onMeaningsListChanged" />
 			<BRow>
 				<BCol>
 					<BButton type="submit"
@@ -121,9 +120,6 @@ import MeaningsList from "../components/MeaningsList.vue"; // Custom component t
 <script lang="ts">
 export default {
 	name: "CreateView",
-	components: {
-		MeaningsList
-	},
 	data()
 	{
 		return {
@@ -134,7 +130,8 @@ export default {
 				gender: "",
 				isHuman: false,
 				nounText: "",
-				errors: []
+				errors: [],
+				meanings: []
 			},
 			nounData: useNounStore()
 		};
@@ -145,6 +142,19 @@ export default {
 			// TODO: write code to validate the input
 		},
 
+		onMeaningsListChanged(meaningsList)
+		{
+			console.log("Meanings list changed: %o", meaningsList);
+			this.meanings = [];
+
+			for (let meaning in meaningsList)
+			{
+				this.meanings.push(meaningsList[meaning]);
+			}
+		
+			console.log("Updated meanings: %o", this.meanings);	
+		},
+
 		onCreateNoun(e)
 		{
 			//e.preventDefault();
@@ -153,7 +163,8 @@ export default {
 				"singular": this.form.nounText,
 				"human": this.form.isHuman,
 				"animate": this.form.isAnimate,
-				"gender": this.form.gender
+				"gender": this.form.gender,
+				"meanings": this.meanings
 			};
 			console.log("Noun data to send: %o", nounData);
 			/*fetch(this.nounData.getNounAPIURL + "/nouns",
