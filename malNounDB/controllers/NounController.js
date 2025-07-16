@@ -11,10 +11,17 @@ module.exports.GetAll = (req, res, next) => {
 
 /* Create a new noun entry in the DB */
 module.exports.CreateNoun = (req, res, next) => {
+	console.log("CreateNoun: request data = %o", req.body);
 /*	if (req.body.singular)
 	{*/
 		Noun.create(req.body) // Create a new noun
-		.then(data => res.json(data)) // Convert the data to JSON
+		.then(data => {
+			res.status(200).json({
+				"success": true,
+				"createdNoun": data
+			});
+		}
+		) // Convert the data to JSON
 		.catch(next); // Handle errors
 	/*}
 

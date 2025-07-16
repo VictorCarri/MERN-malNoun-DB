@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useUserStore } from "../stores/UserStore";
-import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton } from "bootstrap-vue-next";
+import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton, BAlert } from "bootstrap-vue-next";
 import { useNounStore } from "../stores/NounStore";
 import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
 </script>
 
 <template>
 	<div v-if="userData.isLoggedIn">
+		<BAlert variant="success" v-show="showSuccessAlert">
+			Successfully created the noun {{ createdNoun }}!
+		</BAlert>
 		<BRow>
 			<BCol>
 				<h1>
@@ -133,7 +136,9 @@ export default {
 				errors: [],
 				meanings: []
 			},
-			nounData: useNounStore()
+			nounData: useNounStore(),
+			showSuccessAlert: false,
+			createdNoun: ""
 		};
 	},
 	methods: {
@@ -167,7 +172,7 @@ export default {
 				"meanings": this.meanings
 			};
 			console.log("Noun data to send: %o", nounData);
-			/*fetch(this.nounData.getNounAPIURL + "/nouns",
+			fetch(this.nounData.getNounAPIURL + "/nouns",
 				{
 					method: "POST",
 					credentials: "include",
@@ -176,7 +181,43 @@ export default {
 					},
 					body: JSON.stringify(nounData)
 				}
-			);*/
+			)
+			.then(resp => resp.json())
+			.then(data => {
+					console.log(data);
+
+					if (data.success) // We successfully created a noun!
+					{
+						this.createdNoun = data.createdNoun.singular; // Show the user the noun they created
+						this.showSuccessAlert = true;
+						setTimeout(() => {
+								this.showSuccessAlert = false;
+								this.$router.push("/"); // Redirect the user to the homepage to show them the newly-created noun
+							},
+							4000
+						);
+					}
+				
+					else
+					{
+						console.log("Error in creating a noun...");
+					}
+				}
+			)
+			.catch((e) => console.log(e));
+		},
+
+		resetForm()
+		{
+			this.form = {
+				isAnimate: false,
+				gender: "",
+				isHuman: false,
+				nounText: "",
+				errors: [],
+				meanings: []
+			};
+			this.showSuccessAlert = false;
 		},
 
 		onReset(e)
@@ -184,13 +225,7 @@ export default {
 			//e.preventDefault();
 			
 			/* Reset form values */
-			this.form = {
-				isAnimate: false,
-				gender: "",
-				isHuman: false,
-				nounText: "",
-				errors: []
-			},
+			this.resetForm();
 
 			/* Trick to reset/clear native browser form validation state */
 			this.showForm = false;
