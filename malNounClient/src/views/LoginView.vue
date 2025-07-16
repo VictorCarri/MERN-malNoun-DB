@@ -8,7 +8,7 @@ import { useUserStore } from "../stores/UserStore";
 	<div class="login">
 		<BAlert
 			variant="success"
-			v-model="showSuccessAlert"
+			v-show="showSuccessAlert"
 		>
 			Successfully logged in, redirecting...
 		</BAlert>

@@ -26,13 +26,7 @@ const NounSchema = new Schema(
 		plural: {
 			type: String,
 			required: [false, "Only some nouns have irreqular plurals"]
-		},
-		meanings: [
-			{
-				type: String,
-				required: [true, ""]
-			}
-		]
+		}
 	}
 );
 

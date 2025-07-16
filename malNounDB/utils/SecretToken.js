@@ -7,7 +7,7 @@ module.exports.createSecretToken = async (id) => {
 	console.log("createSecretToken: id = %o", id);
 	const user = await User.findById(id);
 	console.log("createSecretToken: user = %o", user);
-	const toReturn = jwt.sign({ id: id, userName: user.username }, process.env.TOKEN_KEY, {
+	const toReturn = jwt.sign({ id: id }, process.env.TOKEN_KEY, {
 			expiresIn: maxTokenAge
 		}
 	);
@@ -19,7 +19,7 @@ module.exports.createRefreshToken = async (id) => {
 	console.log("createRefreshToken: id = %o", id);
 	const user = await User.findById(id);
 	console.log("createRefreshToken: user = %o", user);
-	const toReturn = jwt.sign({ id: id, userName: user.username }, process.env.TOKEN_KEY, {
+	const toReturn = jwt.sign({ id: id}, process.env.TOKEN_KEY, {
 			expiresIn: maxRefreshTokenAge
 		}
 	);

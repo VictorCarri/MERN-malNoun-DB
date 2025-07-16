@@ -1,0 +1,36 @@
+//const Noun = require("../models/noun");
+
+module.exports = {
+  /**
+   * @param db {import('mongodb').Db}
+   * @param client {import('mongodb').MongoClient}
+   * @returns {Promise<void>}
+   */
+  async up(db, client) {
+    // TODO write your migration here.
+    // See https://github.com/seppevs/migrate-mongo/#creating-a-new-migration-script
+    // Example:
+    // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: true}});
+	//await Noun.updateMany({}, { $set: { meanings: [""] } });
+	const colls = db.listCollections();
+	for await (const doc of colls) {
+		console.log(doc);
+	}
+	  const nounColl = db.collection("noun");
+	  console.log(nounColl);
+	  nounColl.updateMany({}, {$set: {meanings: [""]}}, {upsert: true});
+  },
+
+  /**
+   * @param db {import('mongodb').Db}
+   * @param client {import('mongodb').MongoClient}
+   * @returns {Promise<void>}
+   */
+  async down(db, client) {
+    // TODO write the statements to rollback your migration (if possible)
+    // Example:
+    // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
+	//await Noun.updateMany({}, { $unset: { meanings: [] } });
+	nounColl.updateMany({}, {$unset: {meanings: [""]}}, {upsert: true});
+  }
+};

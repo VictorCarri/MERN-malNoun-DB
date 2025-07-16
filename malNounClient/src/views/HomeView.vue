@@ -46,6 +46,11 @@ const userName = computed(() => store.state.userName);*/
 						Singular
 					</h3>
 				</BCol>
+				<BCol>
+					<h3>
+						Meanings
+					</h3>
+				</BCol>
 			</BRow>
 			<BRow v-for="noun in nouns" :key="noun._id">
 				<BCol>
@@ -62,8 +67,15 @@ const userName = computed(() => store.state.userName);*/
 				<BCol>
 					{{ noun.singular }}
 				</BCol>
+				<BCol>
+					<ol>
+						<li v-for="(meaning, index) in noun.meanings" :key="index">
+							{{ meaning }}
+						</li>
+					</ol>
+				</BCol>
 				<BCol v-if="userData.isLoggedIn">
-					<BButton>
+					<BButton @click="onEdit">
 						Edit
 					</BButton>
 				</BCol>
@@ -111,6 +123,12 @@ export default {
 		{
 			console.log("Redirecting to creation page...");
 			this.$router.push("/create");
+		},
+
+		onEdit(e)
+		{
+			console.log("Redirecting you to the editing page...");
+			this.$router.push("/edit");
 		},
 
 		onLogout(e)

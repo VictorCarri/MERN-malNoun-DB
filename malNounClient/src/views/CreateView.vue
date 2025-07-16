@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useUserStore } from "../stores/UserStore";
-import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton } from "bootstrap-vue-next";
-import { watch } from "vue";
+import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton, BAlert } from "bootstrap-vue-next";
 import { useNounStore } from "../stores/NounStore";
+import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
 </script>
 
 <template>
 	<div v-if="userData.isLoggedIn">
+		<BAlert variant="success" v-show="showSuccessAlert">
+			Successfully created the noun {{ createdNoun }}!
+		</BAlert>
 		<BRow>
 			<BCol>
 				<h1>
@@ -95,6 +98,7 @@ import { useNounStore } from "../stores/NounStore";
 					/>
 				</BFormGroup>
 			</BRow>
+			<meanings-list @meanings-list-changed="onMeaningsListChanged" />
 			<BRow>
 				<BCol>
 					<BButton type="submit"
@@ -117,8 +121,6 @@ import { useNounStore } from "../stores/NounStore";
 </template>
 
 <script lang="ts">
-
-
 export default {
 	name: "CreateView",
 	data()
@@ -131,12 +133,33 @@ export default {
 				gender: "",
 				isHuman: false,
 				nounText: "",
-				errors: []
+				errors: [],
+				meanings: []
 			},
-			nounData: useNounStore()
+			nounData: useNounStore(),
+			showSuccessAlert: false,
+			createdNoun: ""
 		};
 	},
 	methods: {
+		validateForm()
+		{
+			// TODO: write code to validate the input
+		},
+
+		onMeaningsListChanged(meaningsList)
+		{
+			console.log("Meanings list changed: %o", meaningsList);
+			this.meanings = [];
+
+			for (let meaning in meaningsList)
+			{
+				this.meanings.push(meaningsList[meaning]);
+			}
+		
+			console.log("Updated meanings: %o", this.meanings);	
+		},
+
 		onCreateNoun(e)
 		{
 			//e.preventDefault();
@@ -145,10 +168,11 @@ export default {
 				"singular": this.form.nounText,
 				"human": this.form.isHuman,
 				"animate": this.form.isAnimate,
-				"gender": this.form.gender
+				"gender": this.form.gender,
+				"meanings": this.meanings
 			};
 			console.log("Noun data to send: %o", nounData);
-			/*fetch(this.nounData.getNounAPIURL + "/nouns",
+			fetch(this.nounData.getNounAPIURL + "/nouns",
 				{
 					method: "POST",
 					credentials: "include",
@@ -157,7 +181,43 @@ export default {
 					},
 					body: JSON.stringify(nounData)
 				}
-			);*/
+			)
+			.then(resp => resp.json())
+			.then(data => {
+					console.log(data);
+
+					if (data.success) // We successfully created a noun!
+					{
+						this.createdNoun = data.createdNoun.singular; // Show the user the noun they created
+						this.showSuccessAlert = true;
+						setTimeout(() => {
+								this.showSuccessAlert = false;
+								this.$router.push("/"); // Redirect the user to the homepage to show them the newly-created noun
+							},
+							4000
+						);
+					}
+				
+					else
+					{
+						console.log("Error in creating a noun...");
+					}
+				}
+			)
+			.catch((e) => console.log(e));
+		},
+
+		resetForm()
+		{
+			this.form = {
+				isAnimate: false,
+				gender: "",
+				isHuman: false,
+				nounText: "",
+				errors: [],
+				meanings: []
+			};
+			this.showSuccessAlert = false;
 		},
 
 		onReset(e)
@@ -165,13 +225,7 @@ export default {
 			//e.preventDefault();
 			
 			/* Reset form values */
-			this.form = {
-				isAnimate: false,
-				gender: "",
-				isHuman: false,
-				nounText: "",
-				errors: []
-			},
+			this.resetForm();
 
 			/* Trick to reset/clear native browser form validation state */
 			this.showForm = false;
