@@ -2,8 +2,8 @@
 </script>
 
 <template>
+	Editing a noun...
 </template>
 
 <script lang="ts">
-	Editing a noun...
 </script>
