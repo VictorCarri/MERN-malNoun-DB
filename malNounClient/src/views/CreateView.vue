@@ -3,6 +3,7 @@ import { useUserStore } from "../stores/UserStore";
 import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton } from "bootstrap-vue-next";
 import { watch } from "vue";
 import { useNounStore } from "../stores/NounStore";
+import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
 </script>
 
 <template>
@@ -95,6 +96,7 @@ import { useNounStore } from "../stores/NounStore";
 					/>
 				</BFormGroup>
 			</BRow>
+			<MeaningsList />
 			<BRow>
 				<BCol>
 					<BButton type="submit"
@@ -117,10 +119,11 @@ import { useNounStore } from "../stores/NounStore";
 </template>
 
 <script lang="ts">
-
-
 export default {
 	name: "CreateView",
+	components: {
+		MeaningsList
+	},
 	data()
 	{
 		return {

@@ -46,6 +46,11 @@ const userName = computed(() => store.state.userName);*/
 						Singular
 					</h3>
 				</BCol>
+				<BCol>
+					<h3>
+						Meanings
+					</h3>
+				</BCol>
 			</BRow>
 			<BRow v-for="noun in nouns" :key="noun._id">
 				<BCol>
@@ -61,6 +66,13 @@ const userName = computed(() => store.state.userName);*/
 				</BCol>
 				<BCol>
 					{{ noun.singular }}
+				</BCol>
+				<BCol>
+					<ol>
+						<li v-for="(meaning, index) in noun.meanings" :key="index">
+							{{ meaning }}
+						</li>
+					</ol>
 				</BCol>
 				<BCol v-if="userData.isLoggedIn">
 					<BButton>
