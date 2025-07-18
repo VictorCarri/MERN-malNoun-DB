@@ -4,7 +4,7 @@ import NounForm from "../components/NounForm.vue";
 </script>
 
 <template>
-	<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onEditNoun" @noun-form-reset="onReset" :initial-form="form" />
+	<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onEditNoun" @noun-form-reset="onReset" :initial-form="form" submit-button-text="Update this noun" />
 </template>
 
 <script lang="ts">

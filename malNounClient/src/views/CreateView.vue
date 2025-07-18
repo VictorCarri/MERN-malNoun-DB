@@ -116,7 +116,7 @@ import NounForm from "../components/NounForm.vue"; // The generic form for editi
 			</BRow>
 		</BForm>-->
 		<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onCreateNoun" @noun-form-reset="onReset" />
-		<BLink to="/">Return to home</BLink>
+		<!--<BLink to="/">Return home</BLink> -->
 	</div>
 	<div v-else>
 		You must <BLink to="/login">login</BLink> to add a noun to the database.

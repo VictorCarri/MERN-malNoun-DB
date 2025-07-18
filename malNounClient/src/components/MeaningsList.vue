@@ -17,6 +17,12 @@ export default {
 			console.log("Adding a meaning to the meanings list");
 			this.enteredMeanings.push("");
 			this.$emit("meaningsListChanged", this.enteredMeanings);
+		},
+
+		onDeleteMeaning(index)
+		{
+			console.log("MeaningList.onDeleteMeaning: deleting meaning @ index %d", index);
+			this.enteredMeanings.splice(index, 1); // Remove the meaning at that index
 		}
 	},
 
@@ -50,11 +56,22 @@ export default {
 		</h4>
 	</b-row>
 	<b-row>
-		<ol @input="$emit('meaningsListChanged', enteredMeanings)">
-			<li v-for="(meaning, index) in enteredMeanings">
-				<b-form-input placeholder="Please enter a meaning" :value="meaning" v-model="enteredMeanings[index]" />
-			</li>
-		</ol>
+		<b-col>
+			<ol @input="$emit('meaningsListChanged', enteredMeanings)">
+				<li v-for="(meaning, index) in enteredMeanings">
+					<b-row>
+						<b-col>
+							<b-form-input placeholder="Please enter a meaning" :value="meaning" v-model="enteredMeanings[index]" />
+						</b-col>
+						<b-col>
+							<b-button variant="danger" @click.prevent="onDeleteMeaning(index)">
+								Delete this meaning
+							</b-button>
+						</b-col>
+					</b-row>
+				</li>
+			</ol>
+		</b-col>
 	</b-row>
 	<b-row>
 		<b-col>
