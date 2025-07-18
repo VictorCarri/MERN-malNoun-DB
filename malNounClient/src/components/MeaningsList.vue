@@ -3,9 +3,11 @@ import { BFormInput, BRow, BCol, BButton, BFormGroup } from "bootstrap-vue-next"
 
 export default {
 	name: "MeaningsList",
+
 	data() {
+		console.log("MeaningsList.data(): initialMeanings = %o", this.initialMeanings);
 		return {
-			enteredMeanings: []
+			enteredMeanings: this.initialMeanings
 		};
 	},
 
@@ -25,7 +27,19 @@ export default {
 		BButton
 	},
 
-	emits: ["meaningsListChanged"]
+	emits: ["meaningsListChanged"],
+
+	props: {
+		initialMeanings: {
+			type: Array,
+			required: false,
+			
+			default(rawProps)
+			{
+				return [];
+			}
+		}
+	}
 };
 </script>
 

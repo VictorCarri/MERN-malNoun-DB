@@ -51,8 +51,13 @@ const userName = computed(() => store.state.userName);*/
 						Meanings
 					</h3>
 				</BCol>
+				<BCol>
+					<h3>
+						Special Plural forms
+					</h3>
+				</BCol>
 			</BRow>
-			<BRow v-for="noun in nouns" :key="noun._id">
+			<BRow v-for="(noun, nounIndex) in nouns" :key="noun._id">
 				<BCol>
 					{{ noun.animate ? "Animate" : "Inanimate"  }}
 				</BCol>
@@ -74,8 +79,11 @@ const userName = computed(() => store.state.userName);*/
 						</li>
 					</ol>
 				</BCol>
+				<BCol v-if="Object.hasOwn(noun, 'plural')"> <!-- The noun has a special plural -->
+					{{ noun.plural }}
+				</BCol>
 				<BCol v-if="userData.isLoggedIn">
-					<BButton @click="onEdit">
+					<BButton @click="onEdit(noun)">
 						Edit
 					</BButton>
 				</BCol>
@@ -125,10 +133,12 @@ export default {
 			this.$router.push("/create");
 		},
 
-		onEdit(e)
+		onEdit(data)
 		{
-			console.log("Redirecting you to the editing page...");
+			console.log("Redirecting you to the editing page...\nData = %o", data);
+			this.nounData.setCurrentNoun(data);
 			this.$router.push("/edit");
+			console.log("onEdit: After router call");
 		},
 
 		onLogout(e)
