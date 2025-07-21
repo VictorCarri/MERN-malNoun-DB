@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { BForm, BRow, BFormGroup, BFormCheckbox, BFormSelect, BFormSelectOption, BFormInput, BButton, BCol, BLink } from "bootstrap-vue-next";
 import MeaningsList from "./MeaningsList.vue";
+import { object, boolean, string, array } from "yup";
 </script>
 
 <template>
 	<BRow>
-		<BForm v-if="showForm" @submit.prevent="$emit('nounFormSubmitted', form)" @reset.prevent="$emit('nounFormReset')">
+		<BForm v-if="showForm" @submit.prevent="$emit('nounFormSubmitted', form)" @reset.prevent="$emit('nounFormReset')" @change="$emit('validityChanged', formIsValid(), form, formValidationResult, formValidationErrs)">
 			<BRow>
 				<BFormGroup
 					id="animacyInpGroup"
@@ -88,6 +89,7 @@ import MeaningsList from "./MeaningsList.vue";
 			</BRow>
 		</BForm>
 	</BRow>
+	<br />
 	<BRow>
 		<BCol>
 			<BLink to="/">Return home</BLink>
@@ -98,6 +100,7 @@ import MeaningsList from "./MeaningsList.vue";
 <script lang="ts">
 export default {
 	name: "NounForm",
+
 	props: {
 		meaningsListChangedHandler: {
 			type: Function,
@@ -137,7 +140,32 @@ export default {
 				nounText: this.initialForm.nounText,
 				errors: [],
 				meanings: this.initialForm.meanings
-			}
+			},
+			formSchema: object(
+				{
+					isAnimate: boolean().required().default(false),
+					gender: string().required().lowercase().oneOf(["masculine", "feminine", "neuter"]),
+					isHuman: boolean().required().default(false),
+					nounText: string().required().min(1).test("onlyContainsMalayalam", "${path} contains invalid Malayalam code points", (value, context) => {
+							const codePoints = Array.from(value);
+							console.log("Malayalam code points: %o", codePoints);
+							let toReturn = true;
+		
+							for (let codePoint = 0; codePoint < codePoints.length - 1; codePoint++)
+							{
+								console.log("Current Malayalam code point: %o", codePoints[codePoint]);
+								const curCodePoint = codePoints[codePoint].codePointAt(0);
+								console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
+								toReturn = toReturn && curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F;
+							}
+
+							return toReturn;
+					}),
+					meanings: array().of(string().required().min(1)).min(1)
+				}
+			),
+			formValidationResult: {},
+			formValidationErrs: []
 		};
 		console.log("NounForm.data(): returning %o", toReturn);
 		return toReturn;
@@ -154,6 +182,25 @@ export default {
 		BButton
 	},
 
-	emits: ["nounFormSubmitted", "nounFormReset"]
+	emits: ["nounFormSubmitted", "nounFormReset", "validityChanged"],
+
+	methods: {
+		async formIsValid()
+		{
+			try
+			{
+				this.formValidationResult = await this.formSchema.validate(this.form);
+				console.log("NounForm: result of validation: %o", this.formValidationResult);
+				return true;
+			}
+
+			catch (e)
+			{
+				console.error("Form validation error: %o", e);
+				this.formValidationErrs = e.errors;
+				return false;
+			}
+		}
+	}
 };
 </script>

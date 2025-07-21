@@ -9,7 +9,8 @@ export const useNounStore = defineStore("noun", {
 					gender: "",
 					human: false,
 					singular: "",
-					plural: ""
+					plural: "",
+					id: ""
 				}
 			};
 		},

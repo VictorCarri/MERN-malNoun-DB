@@ -24,8 +24,8 @@ const userName = computed(() => store.state.userName);*/
 			<h2>Editable list of nouns</h2>
 		</div>
 		<h2 v-else>List of nouns</h2>
-		<BContainer>
-			<BRow>
+		<BContainer fluid>
+			<BRow fluid>
 				<BCol>
 					<h3>
 						Animate?
@@ -57,7 +57,7 @@ const userName = computed(() => store.state.userName);*/
 					</h3>
 				</BCol>
 			</BRow>
-			<BRow v-for="(noun, nounIndex) in nouns" :key="noun._id">
+			<BRow v-for="(noun, nounIndex) in nouns" :key="noun._id" fluid>
 				<BCol>
 					{{ noun.animate ? "Animate" : "Inanimate"  }}
 				</BCol>
