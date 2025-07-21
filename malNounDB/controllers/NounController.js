@@ -75,7 +75,12 @@ module.exports.UpdateNoun = (req, res, next) => {
 			else // Send the updated document back as the response
 			{
 				/*return*/ res.status(200)
-				.json(updatedNoun);
+				.json(
+					{
+						"success": true,
+						"updatedNoun": updatedNoun
+					}
+				);
 			}
 		}
 	)

@@ -2,7 +2,8 @@
 import { useUserStore } from "../stores/UserStore";
 import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton, BAlert } from "bootstrap-vue-next";
 import { useNounStore } from "../stores/NounStore";
-import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
+//import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
+import NounForm from "../components/NounForm.vue"; // The generic form for editing a noun
 </script>
 
 <template>
@@ -24,15 +25,15 @@ import MeaningsList from "../components/MeaningsList.vue"; // Custom component t
 				</h2>
 			</BCol>
 		</BRow>
-		<BRow v-if="form.errors.length">
+		<BRow v-if="formErrors.length">
 			<h3>Please correct the following error(s):</h3>
 			<ul>
-				<li v-for="error in form.errors">
+				<li v-for="error in formErrors">
 					{{ error }}	
 				</li>
 			</ul>
 		</BRow>
-		<BForm v-if="showForm" @submit.prevent="onCreateNoun" @reset.prevent="onReset">
+		<!--<BForm v-if="showForm" @submit.prevent="onCreateNoun" @reset.prevent="onReset">
 			<BRow>
 				<BFormGroup
 					id="animacyInpGroup"
@@ -113,7 +114,9 @@ import MeaningsList from "../components/MeaningsList.vue"; // Custom component t
 					</BButton>
 				</BCol>
 			</BRow>
-		</BForm>
+		</BForm>-->
+		<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onCreateNoun" @noun-form-reset="onReset" />
+		<!--<BLink to="/">Return home</BLink> -->
 	</div>
 	<div v-else>
 		You must <BLink to="/login">login</BLink> to add a noun to the database.
@@ -128,25 +131,21 @@ export default {
 		return {
 			userData: useUserStore(),
 			showForm: true,
-			form: {
+			/*form: {
 				isAnimate: false,
 				gender: "",
 				isHuman: false,
 				nounText: "",
 				errors: [],
 				meanings: []
-			},
+			},*/
 			nounData: useNounStore(),
 			showSuccessAlert: false,
-			createdNoun: ""
+			createdNoun: "",
+			formErrors: []
 		};
 	},
 	methods: {
-		validateForm()
-		{
-			// TODO: write code to validate the input
-		},
-
 		onMeaningsListChanged(meaningsList)
 		{
 			console.log("Meanings list changed: %o", meaningsList);
@@ -160,16 +159,16 @@ export default {
 			console.log("Updated meanings: %o", this.meanings);	
 		},
 
-		onCreateNoun(e)
+		onCreateNoun(formData)
 		{
 			//e.preventDefault();
-			console.log("Creating a noun...");
+			console.log("Creating a noun...\nForm data = %o", formData);
 			const nounData = {
-				"singular": this.form.nounText,
-				"human": this.form.isHuman,
-				"animate": this.form.isAnimate,
-				"gender": this.form.gender,
-				"meanings": this.meanings
+				"singular": formData.nounText,
+				"human": formData.isHuman,
+				"animate": formData.isAnimate,
+				"gender": formData.gender,
+				"meanings": formData.meanings
 			};
 			console.log("Noun data to send: %o", nounData);
 			fetch(this.nounData.getNounAPIURL + "/nouns",
