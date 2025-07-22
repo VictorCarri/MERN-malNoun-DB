@@ -16,9 +16,15 @@ const userName = computed(() => store.state.userName);*/
 		Loading noun data...
 	</div>
 	<div v-else>
-		<BAlert v-if="showLogoutAlert">
+		<BAlert v-show="showLogoutAlert" variant="success">
 			Successfully logged you out!
 		</BAlert>
+		<b-alert v-show="showDeletionAlert" variant="success">
+			Successfully deleted the noun {{ deletedNoun.singular }}.
+		</b-alert>
+		<b-alert v-show="showDeletionFailureAlert" variant="danger">
+			Could't delete the noun {{ deletedNoun.singular }}: {{ deletionError }}.
+		</b-alert>
 		<div v-if="userData.isLoggedIn">
 			<h1>Welcome, {{userData.getUserName}}</h1>
 			<h2>Editable list of nouns</h2>
@@ -88,19 +94,19 @@ const userName = computed(() => store.state.userName);*/
 					</BButton>
 				</BCol>
 				<BCol v-if="userData.isLoggedIn">
-					<BButton variant="danger">
+					<BButton variant="danger" @click="onDelete(noun)">
 						Delete
 					</BButton>
 				</BCol>
 			</BRow>
 			<BRow v-if="userData.isLoggedIn">
 				<BCol>
-					<BButton @click.prevent="onCreate">
+					<BButton @click="onCreate">
 						Add a new noun
 					</BButton>
 				</BCol>
 				<BCol>
-					<BButton @click.prevent="onLogout">
+					<BButton @click="onLogout">
 						Logout
 					</BButton>
 				</BCol>
@@ -123,7 +129,11 @@ export default {
 			loading: true,
 			userData: useUserStore(),
 			nounData: useNounStore(),
-			showLogoutAlert: false
+			showLogoutAlert: false,
+			deletedNoun: "",
+			showDeletionAlert: false,
+			deletionError: "",
+			showDeletionFailureAlert: false
 		};
 	},
 	methods: {
@@ -139,6 +149,52 @@ export default {
 			this.nounData.setCurrentNoun(data);
 			this.$router.push("/edit");
 			console.log("onEdit: After router call");
+		},
+
+		async onDelete(noun)
+		{
+			console.log("Deleting noun %o", noun._id);
+			const fetchURL = new URL(this.nounData.getNounAPIURL + "/nouns/" + noun._id);
+			const fetchOpts = {
+					method: "DELETE",
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/json"
+					}
+			};
+	
+			try
+			{
+				const fetchResp = await fetch(fetchURL, fetchOpts);
+				const jsonData = await fetchResp.json();
+				console.log(jsonData);
+				this.deletedNoun = noun; // So that the UI can show the appropriate alert
+
+				if (jsonData.success) // Delete operation was successful
+				{
+					this.showDeletionAlert = true;
+					setTimeout(() => {
+							this.showDeletionAlert = false;
+							this.$router.push("/"); // Reload the page
+						},
+					4000);
+				}
+
+				else // Delete operation was unsuccessful
+				{
+					this.showDeletionFailureAlert = true;
+					this.deletionError = jsonData.error;
+					setTimeout(() => {
+							this.showDeletionFailureAlert = false;
+						},
+					4000);
+				}
+			}
+
+			catch (e)
+			{
+				console.log("onDelete: fetch error: %o", e);
+			}
 		},
 
 		onLogout(e)

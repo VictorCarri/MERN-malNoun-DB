@@ -72,7 +72,15 @@ export default {
 					headers: {
 						"Content-Type": "application/json"
 					},
-					body: JSON.stringify(formData)
+					body: JSON.stringify(
+						{
+							singular: this.form.nounText,
+							human: this.form.isHuman,
+							animate: this.form.isAnimate,
+							gender: this.form.gender,
+							meanings: this.form.meanings
+						}
+					)
 				};
 				console.log("Fetching URL %o with data %o", urlToFetch, fetchOpts);
 				const fetchRes = await fetch(urlToFetch, fetchOpts); // Fetch the data

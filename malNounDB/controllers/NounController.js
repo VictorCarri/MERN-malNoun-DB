@@ -4,7 +4,23 @@ const Noun = require("../models/noun"); // Noun model
 module.exports.GetAll = (req, res, next) => {
 	// Return all nouns as a JSON array
 	Noun.find({}) // Get all nouns
-	.then(data => res.json(data)) // Convert the data to JSON
+	.then(data => 
+		res.json(
+			data.sort(
+				(a, b) => {
+					if (a.createdAt == b.createdAt)
+					{
+						return a.updatedAt - b.updatedAt;
+					}
+
+					else
+					{
+						return a.createdAt - b.createdAt;
+					}
+				}
+			)
+		)
+	) // Convert the data to JSON
 	.catch(next) // Handle errors
 	.finally(next);
 };
@@ -37,12 +53,18 @@ module.exports.CreateNoun = (req, res, next) => {
 
 /* Delete a noun from the DB */
 module.exports.DeleteNoun = (req, res, next) => {
+	console.log("DeleteNoun: ID of noun to delete = %o", req.params.id);
 	Noun.findOneAndDelete(
 		{
 			"_id": req.params.id // ID of the noun to delete
 		}
 	)
-	.then(data => res.status(200).json(data))
+	.then(data => res.status(200).json(
+		{
+			"success": true,
+			"deletionData": data
+		}
+	))
 	.catch(next)
 	.finally(next);
 	//return res.status(200);
@@ -51,9 +73,12 @@ module.exports.DeleteNoun = (req, res, next) => {
 /* Update a noun in the DB */
 module.exports.UpdateNoun = (req, res, next) => {
 	console.log("UpdateNoun\n\tNoun ID: %o\n\tReq body: %o", req.params.id, req.body);
+	let bodyWithDate = JSON.parse(JSON.stringify(req.body));
+	bodyWithDate["updatedAt"] = new Date();
+	console.log("\n\tBody with date = %o",  bodyWithDate);
 	Noun.findByIdAndUpdate(
 		req.params.id,
-		req.body,
+		bodyWithDate,
 		{
 			new: true,
 			runValidators: true
