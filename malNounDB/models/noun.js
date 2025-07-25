@@ -40,6 +40,37 @@ const NounSchema = new Schema(
 		updatedAt: {
 			type: Date,
 			default: new Date()
+		},
+		pluralOptional: {
+			type: Boolean,
+			required: [false, "Not all nouns have optional plurals"],
+			default: false
+		},
+		multiplePlurals: [
+			{
+				type: String,
+				required: [false, "Not all nouns have multiple plurals"]
+			}
+		],
+		hasPlural: {
+			type: Boolean,
+			default: true,
+			required: [false, "Most nouns have plurals"]
+		},
+		denotesYoungChild: {
+			type: Boolean,
+			default: false,
+			required: [false, "Not every noun denotes a young child"]
+		},
+		hasMultiplePlurals: {
+			type: Boolean,
+			default: false,
+			required: [true, "We need to know whether every noun has multiple plurals or not"]
+		},
+		hasIrregularPlural: {
+			type: Boolean,
+			default: false,
+			required: [true, "We need to know whether every noun has an irregular plural or not"]
 		}
 	}
 );

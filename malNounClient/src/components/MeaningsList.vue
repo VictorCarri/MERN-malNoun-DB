@@ -23,6 +23,7 @@ export default {
 		{
 			console.log("MeaningList.onDeleteMeaning: deleting meaning @ index %d", index);
 			this.enteredMeanings.splice(index, 1); // Remove the meaning at that index
+			this.$emit("meaningsListChanged", this.enteredMeanings);
 		}
 	},
 
@@ -50,6 +51,7 @@ export default {
 </script>
 
 <template>
+	<hr />
 	<b-row>
 		<h4>
 			Enter this noun&apos;s meanings
@@ -80,4 +82,5 @@ export default {
 			</b-button>
 		</b-col>
 	</b-row>
+	<hr />
 </template>

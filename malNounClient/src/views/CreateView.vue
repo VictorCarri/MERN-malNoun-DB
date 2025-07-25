@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUserStore } from "../stores/UserStore";
-import { BLink, BForm, BFormGroup, BFormCheckbox, BContainer, BRow, BCol, BFormSelect, BFormSelectOption, BFormInput, BButton, BAlert } from "bootstrap-vue-next";
+import { BLink, BRow, BCol, BAlert } from "bootstrap-vue-next";
 import { useNounStore } from "../stores/NounStore";
 //import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
 import NounForm from "../components/NounForm.vue"; // The generic form for editing a noun
@@ -8,118 +8,30 @@ import NounForm from "../components/NounForm.vue"; // The generic form for editi
 
 <template>
 	<div v-if="userData.isLoggedIn">
-		<BAlert variant="success" v-show="showSuccessAlert">
+		<b-alert variant="success" v-show="showSuccessAlert">
 			Successfully created the noun {{ createdNoun }}!
-		</BAlert>
-		<BRow>
-			<BCol>
+		</b-alert>
+		<b-alert variant="danger" v-show="formErrors.length" dismissible>
+			There is at least 1 error!
+		</b-alert>
+		<b-row>
+			<b-col>
 				<h1>
 					Add a new noun to the database
 				</h1>
-			</BCol>
-		</BRow>
-		<BRow>
-			<BCol>
+			</b-col>
+		</b-row>
+		<b-row>
+			<b-col>
 				<h2>
 					Enter the new noun&apos;s data
 				</h2>
-			</BCol>
-		</BRow>
-		<BRow v-if="formErrors.length">
-			<h3>Please correct the following error(s):</h3>
-			<ul>
-				<li v-for="error in formErrors">
-					{{ error }}	
-				</li>
-			</ul>
-		</BRow>
-		<!--<BForm v-if="showForm" @submit.prevent="onCreateNoun" @reset.prevent="onReset">
-			<BRow>
-				<BFormGroup
-					id="animacyInpGroup"
-					label="Animacy:"
-					label-for="animacyInp"
-					description="Please choose the animacy of the new noun."
-				>
-					<BFormCheckbox
-						id="animacyInp"
-						v-model="form.isAnimate"
-						name="animacyInp"
-					>
-						Set whether or not the noun is animate
-					</BFormCheckbox>
-				</BFormGroup>
-			</BRow>
-			<BRow>
-				<BFormGroup
-					id="genderInpGroup"
-					label="Gender"
-					label-for="genderInp"
-					description="Please choose the new noun's gender."
-				>
-					<BFormSelect v-model="form.gender">
-						<BFormSelectOption value="masculine">
-							Masculine
-						</BFormSelectOption>
-						<BFormSelectOption value="feminine">
-							Feminine
-						</BFormSelectOption>
-						<BFormSelectOption value="neuter">
-							Neuter
-						</BFormSelectOption>
-					</BFormSelect>
-				</BFormGroup>
-			</BRow>
-			<BRow>
-				<BFormGroup
-					id="humanInpGroup"
-					label="Humanness:"
-					label-for="humanInp"
-					description="Please choose whether the new noun refers to a human entity or not:"
-				>
-					<BFormCheckbox
-						id="humanInp"
-						v-model="form.isHuman"
-						name="humanInp"
-					>
-						Set whether or not the noun refers to a human
-					</BFormCheckbox>
-				</BFormGroup>
-			</BRow>
-			<BRow>
-				<BFormGroup
-					id="nounTextInpGroup"
-					label="Please type the noun in Malayalam Unicode:"
-					label-form="nounTextInp"
-					description="The noun in Malayalam Unicode."
-				>
-					<BFormInput
-						v-model="form.nounText"
-						placeholder="മലയാളം"
-					/>
-				</BFormGroup>
-			</BRow>
-			<meanings-list @meanings-list-changed="onMeaningsListChanged" />
-			<BRow>
-				<BCol>
-					<BButton type="submit"
-						variant="primary">
-						Create the new noun
-					</BButton>
-				</BCol>
-				<BCol>
-					<BButton type="reset"
-						variant="danger">
-						Reset the form
-					</BButton>
-				</BCol>
-			</BRow>
-		</BForm>-->
-		<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onCreateNoun" @noun-form-reset="onReset" />
-		<!--<BLink to="/">Return home</BLink> -->
+			</b-col>
+		</b-row>
+		<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onCreateNoun" @noun-form-reset="onReset" @validity-changed="onValidityChanged" />
 	</div>
 	<div v-else>
-		You must <BLink to="/login">login</BLink> to add a noun to the database.
+		You must <b-link to="/login">login</b-link> to add a noun to the database.
 	</div>
 </template>
 
@@ -131,18 +43,12 @@ export default {
 		return {
 			userData: useUserStore(),
 			showForm: true,
-			/*form: {
-				isAnimate: false,
-				gender: "",
-				isHuman: false,
-				nounText: "",
-				errors: [],
-				meanings: []
-			},*/
 			nounData: useNounStore(),
 			showSuccessAlert: false,
 			createdNoun: "",
-			formErrors: []
+			formErrors: [],
+			formIsValid: false,
+			showErrorsAlert: false
 		};
 	},
 	methods: {
@@ -162,14 +68,60 @@ export default {
 		onCreateNoun(formData)
 		{
 			//e.preventDefault();
+			
+			if (!this.formIsValid) // Form is invalid
+			{
+				return;
+			}
+			
 			console.log("Creating a noun...\nForm data = %o", formData);
-			const nounData = {
-				"singular": formData.nounText,
-				"human": formData.isHuman,
-				"animate": formData.isAnimate,
-				"gender": formData.gender,
-				"meanings": formData.meanings
+			const nounData = { // Req'd parameters
+				singular: formData.nounText,
+				human: formData.isHuman,
+				animate: formData.isAnimate,
+				gender: formData.gender,
+				meanings: formData.meanings
 			};
+
+			/* Only include optional parameters if they're set to non-defaults */
+			if (formData.hasOwnProperty("irregularPlural"))
+			{
+				if (formData.irregularPlural.length >= 1)
+				{
+					nounData.plural = formData.irregularPlural;
+				}
+			}
+
+			if (formData.pluralIsOptional)
+			{
+				nounData.pluralOptional = true;
+			}
+
+			if (formData.pluralsList.length > 0)
+			{
+				nounData.multiplePlurals = formData.pluralsList;
+			}
+
+			if (!formData.hasPlural)
+			{
+				nounData.hasPlural = false;
+			}
+
+			if (formData.isYoungChild)
+			{
+				nounData.denotesYoungChild = true;
+			}
+
+			if (formData.hasMultiplePlurals)
+			{
+				nounData.hasMultiplePlurals = true;
+			}
+
+			if (formData.hasIrregularPlural)
+			{
+				nounData.hasIrregularPlural = true;
+			}
+
 			console.log("Noun data to send: %o", nounData);
 			fetch(this.nounData.getNounAPIURL + "/nouns",
 				{
@@ -232,6 +184,25 @@ export default {
 					this.showForm = true;
 				}
 			);
+		},
+
+		onValidityChanged(formIsValid, form, formValidationResult, formValidationErrs)
+		{
+			console.log("onValidityChanged: formIsValid = %o", formIsValid);
+			console.log("onValidityChanged: formValidationErrs = %o", formValidationErrs);
+			this.formIsValid = formIsValid;
+			console.log("onValidityChanged: this.formIsValid = %o", this.formIsValid);
+
+			if (this.formIsValid)
+			{
+				this.formErrors = [];
+			}
+
+			else
+			{
+				this.formErrors = formValidationErrs;
+				console.log("onValidityChanged: this.formErrors = %o", this.formErrors);
+			}
 		}
 	}
 };
