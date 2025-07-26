@@ -49,7 +49,8 @@ const isYoungChildValidator = body("isYoungChild").exists().isBoolean();
 const hasMultiplePlurals = body("hasMultiplePlurals").optional().exists().isBoolean();
 const meaningsValidator = body("meanings").exists().isArray({min: 1});
 const hasIrregularPluralValidator = body("hasIrregularPlural").exists().isBoolean();
-router.post("/nouns", requireAuth, jsonValidator, bodyParser, singularValidator, humanValidator, animateValidator, genderValidator, meaningsValidator, pluralValidator, pluralIsOptionalValidator, hasPluralValidator, isYoungChildValidator, hasIrregularPluralValidator, CreateNoun); // POST to create a new noun entry
+const pluralsListValidator = body("pluralsList").optional().exists().isArray({min: 1});
+router.post("/nouns", requireAuth, jsonValidator, bodyParser, singularValidator, humanValidator, animateValidator, genderValidator, meaningsValidator, pluralValidator, pluralIsOptionalValidator, hasPluralValidator, isYoungChildValidator, hasIrregularPluralValidator, pluralsListValidator, CreateNoun); // POST to create a new noun entry
 
 /*
 * To delete a noun, we need to:

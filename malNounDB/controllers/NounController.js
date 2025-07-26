@@ -25,11 +25,40 @@ module.exports.GetAll = (req, res, next) => {
 	.finally(next);
 };
 
+function addKalToNeuterNoun(singularForm)
+{
+	const endsInAm = /^(.*)\u0D02$/u; // A noun ending in -am
+	const endsInShortUOrLongVowel = /^(.*)[\u0D41|\u0D3E|\u0D40|\u0D42|\u0D47|\u0D48|\u0D48|\u0D4C]$/u; // A noun ending in a short -u or any long vowel
+	const endsInSchwa = /^(.*)\u0D4D$/u; // A noun ending in a schwa
+	
+	console.log("addKalToNeuterNoun: endsInSchwa.test(%s): %b", singularForm, endsInSchwa.test(singularForm));
+
+	if (endsInAm.test(singularForm))
+	{
+		return singularForm.replace(endsInAm, "$1\u0D19\u0D4D\u0D19\u0D7E"); // Replace -am with -angngaL
+	}
+
+	else if (endsInShortUOrLongVowel.test(singularForm))
+	{
+		return singularForm + "\u0D15\u0D4D\u0D15\u0D7E"; // Add -kkaL
+	}
+
+	else if (endsInSchwa.test(singularForm))
+	{
+		return singularForm.replace(endsInSchwa, "$1\u0D41\u0D15\u0D7E"); // Replace the schwa with an -u, then add -kaL
+	}
+
+	else // Default
+	{
+		return singularForm + "\u0D15\u0D7E"; // Add -kaL
+	}	
+}
+
 module.exports.GetPlural = async (req, res, next) => {
 	try
 	{
 		const noun = await Noun.findOne({ _id: req.params.id});
-		console.log(noun);
+		console.log("GetPlural: pluralizing %o", noun);
 		
 		if (noun.human) // The noun refers to a human entity
 		{
@@ -52,6 +81,30 @@ module.exports.GetPlural = async (req, res, next) => {
 				);
 			}
 
+			else if (noun.denotesYoungChild) // These all add variants of -kaL
+			{
+				const endsInSchwa = /^(.*[\u0D15-\u0D3A])\u0D4D/u; // A noun that ends in a consonant followed by a schwa
+				
+				if (endsInSchwa.test(noun.singular))
+				{
+					res.status(200).json(
+						{
+							pluralStem: noun.singular.replace(endsInSchwa, "$1"), // The plural stem is the stem without the schwa
+							pluralSuffix: "\u0D41\u0D19\u0D4D\u0D19\u0D7E" // - ungngaL
+						}
+					);
+				}
+
+				else // Append -kaL
+				{
+					res.status(200).json(
+						{
+							pluralSuffix: "\u0D15\u0D7E" // kaL
+						}
+					);
+				}
+			}
+
 			else // Generate this [+HUM] noun's plural
 			{
 				const endsInLongAOrSyllabicRReg = /^.*[\u0D3E|\u0D43]$/u;
@@ -65,7 +118,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E"
+								pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // -kkaL
 							}
 						);
 					}
@@ -74,7 +127,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								epicenePlural: noun.replace(endsInKaaranReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
+								epicenePlural: noun.singular.replace(endsInKaaranReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
 								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
 							}
 						);
@@ -84,7 +137,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								epicenePlural: noun.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
+								epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
 								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
 							}
 						);
@@ -94,7 +147,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								pluralSuffix: "\u0D2E\u0D3E\u0D7C"
+								pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
 							}
 						);
 					}
@@ -131,7 +184,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E"
+								pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // kkaL
 							}
 						);
 					}
@@ -140,7 +193,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								epicenePlural: noun.replace(endsInKaariReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
+								epicenePlural: noun.singular.replace(endsInKaariReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
 								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
 							}
 						);
@@ -150,7 +203,7 @@ module.exports.GetPlural = async (req, res, next) => {
 					{
 						res.status(200).json(
 							{
-								epicenePlural: noun.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
+								epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
 								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
 							}
 						);
@@ -165,16 +218,41 @@ module.exports.GetPlural = async (req, res, next) => {
 						);
 					}
 				} // feminine
-
-				else // Neuter nouns
-				{
-				}
 			}
 		}
 
 		else if (!noun.human && noun.animate) // The noun is [-HUM], but [+ANIM]
 		{
-			
+			const endsInAn = /^.*\u0D7B$/u;	 // A noun that ends in a chillu alveolar nasal
+
+			if (endsInAn.test(noun.singular)) // A few nouns that are [-HUM] but end in -an
+			{
+				res.status(200).json(
+					{
+						pluralSuffix: "\u0D2E\u0D3E\u0D7C" // -maar
+					}
+				);
+			}
+
+			else // -kaL and variants
+			{
+				res.status(200).json(
+					{
+						plural: addKalToNeuterNoun(noun.singular)
+					}
+				);
+			}
+		}
+
+		else // Neither [+HUM] nor [+ANIM]
+		{
+			console.log("GetPlural: the noun is neither human nor animate.");
+
+			res.status(200).json(
+				{
+					plural: addKalToNeuterNoun(noun.singular)
+				}
+			);
 		}
 	}
 
