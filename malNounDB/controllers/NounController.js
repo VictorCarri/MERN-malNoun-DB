@@ -30,8 +30,9 @@ function addKalToNeuterNoun(singularForm)
 	const endsInAm = /^(.*)\u0D02$/u; // A noun ending in -am
 	const endsInShortUOrLongVowel = /^(.*)[\u0D41|\u0D3E|\u0D40|\u0D42|\u0D47|\u0D48|\u0D48|\u0D4C]$/u; // A noun ending in a short -u or any long vowel
 	const endsInSchwa = /^(.*)\u0D4D$/u; // A noun ending in a schwa
+	const singularCodePoints = Array.from(singularForm);
 	
-	console.log("addKalToNeuterNoun: endsInSchwa.test(%s): %b", singularForm, endsInSchwa.test(singularForm));
+	console.log("addKalToNeuterNoun: endsInSchwa.test(%s): %o\n\tCode points: %o", singularForm, endsInSchwa.test(singularForm), singularCodePoints);
 
 	if (endsInAm.test(singularForm))
 	{
