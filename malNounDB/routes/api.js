@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { requireAuth } = require("../middleware/AuthMiddleware"); // Authentication middleware
-const { GetAll, CreateNoun, DeleteNoun, UpdateNoun, GetPlural } = require("../controllers/NounController.js"); // Noun controller that responds to routes
+const { GetAll, CreateNoun, DeleteNoun, UpdateNoun, GetPlural, GetDeclensions } = require("../controllers/NounController.js"); // Noun controller that responds to routes
 const { bodyParser, jsonValidator, validateMalayalam, validateGender } = require("../middleware/FormMiddleware.js"); // To validate the body as JSON, then parse the JSON into body properties
 const { body } = require("express-validator"); // Main body validator creator function
 
@@ -10,7 +10,8 @@ const { body } = require("express-validator"); // Main body validator creator fu
 
 /* GET routes */
 router.get("/nouns", GetAll); // GET all nouns
-router.get("/nouns/:id/plural", GetPlural); // Get the plural form of a noun
+router.get("/nouns/:id/plural", GetPlural); // Get the nominative plural form of a noun
+router.get("/nouns/:id/declensions", GetDeclensions); // Get all of a noun's declensions
 
 /*
 * To create a noun, we need to:
