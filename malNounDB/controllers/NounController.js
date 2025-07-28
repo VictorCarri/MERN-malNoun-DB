@@ -362,6 +362,82 @@ module.exports.GetPlural = async (req, res, next) => {
 	}
 };
 
+function declineSingularFrontVowelStem(noun)
+{
+	return {
+		type: "fv", // "f"ront "v"owel
+		nominative: noun.singular,
+		stems: {
+			dative: noun.singular, // Front-vowel stems use the same stem as the nominative in the dative
+			other: noun.singular + "\u0D2F", // Add a /j/ because all other case endings begin with vowels, and Malayalam inserts a consonant to break the hiatus
+		},
+		suffixes: {
+			accusative: "\u0D46", // െ
+			genitive: "\u0D41\u0D1F\u0D46", // ുടെ
+			dative: "\u0D15\u0D4D\u0D15\u0D4D", // ക്ക്
+			locative: "\u0D3F\u0D7D", // ിൽ
+			sociative: "\u0D4B\u0D1F\u0D4D", // ോട്
+			instrumental: "\u0D3E\u0D7D", // ാൽ
+			adessive: "\u0D47\u0D7D" // േൽ
+		}
+	};
+}
+
+function declineSingularBackVowelStem(noun)
+{
+	return {
+		type: "bv", // "B"ack "v"owel
+		nominative: noun.singular,
+		stems: {
+			nonNominative: noun.singular + "\u0D35", // Add a വ
+			other: noun.singular
+		},
+		increments: {
+			nonNominative:"\u0D3F\u0D28" // -ിന്
+		},
+		suffixes: {
+			accusative: "\u0D46", // െ
+			genitive: "\u0D31\u0D4D\u0D31\u0D46", // റ്റെ
+			dative: [
+				"\u0D4D\u0D28\u0D4D", // ന്
+				"\u0D4D" // ്
+			],
+			locative: "\u0D3F\u0D7D", // ിൽ
+			sociative: "\u0D4B\u0D1F\u0D4D", // ോട്
+			instrumental: "\u0D3E\u0D7D", // ാൽ
+			adessive: "\u0D47\u0D7D" // േൽ
+		}
+	};
+}
+
+const isSchwaStem = /^(.*[\u0D15-\u0D3A])\u0D4D$/u;
+
+function declineSingularSchwaStem(noun)
+{
+	toReturn = {
+		type: "-്\u0D4D", // Schwa
+		nominative: noun.singular,
+		increments: {
+			nonLocative: "\u0D3F\u0D28" // -ിന്
+		},
+		stems: {
+			nonNominative: noun.singular.replace(isSchwaStem, "$1") // Remove the schwa to form the non-nominative stem
+		},
+		suffixes: {
+			accusative: "\u0D46",
+			genitive: "\u0D31\u0D4D\u0D31\u0D46",
+			dative: [
+				"\u0D28\u0D4D", // ന്
+				"\u0D4D" // ്
+			],
+			locative: "\u0D3F\u0D7D", // ിൽ
+			sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+			instrumental: "\u0D3E\u0D7D", // -ാൽ
+			adessive: "\u0D47\u0D7D" // -േൽ
+		}
+	};
+}
+
 function declineSingular(noun)
 {
 	/*
@@ -371,7 +447,7 @@ function declineSingular(noun)
 	* 3) -Ruh stem
 	* 4) -Duh stem
 	* 5) -aL stem
-	* 6) Schwa-stem
+	* 6) ്-stem
 	* 7) Vowel-stem (else)
 	*/
 	const isAnStem = /^(.*)\u0D7B$/u;
@@ -379,135 +455,240 @@ function declineSingular(noun)
 	const isRuhStem = /^(.*)\u0D31\u0D4D$/u;
 	const isDuhStem = /^(.*)\u0D1F\u0D4D$/u;
 	const isALStem = /^(.*)\u0D7E$/u;
-	const isSchwaStem = /^(.*[\u0D15-\u0D3A])\u0D4D$/u;
+	//const isSchwaStem = /^(.*[\u0D15-\u0D3A])\u0D4D$/u;
 	const isSyllabicRStem = /^(.*)([\u0D43-\u0D44])$/u;
-	const toReturn = { // Structure: all of the strings (except the nominative) originate as empty. Any string which is set must be displayed. Any string which remains empty should be ignored.
-		nominative: noun.singular,
-		nonNominativeStem: {
-			allOthers: "",
-			genitive: []
-			locative: "",
-			dative: ""
-		},
-		increment: {
-			obligatory: "",
-			optional: "",
-			locative: "",
-			otherNonNominative: ""
-		},
-		accusative: "\u0D46", // e-matra
-		genitive: "",
-		dative: [],
-		locative: ["\u0D3F\u0D7D"], // il
-		sociative: "\u0D4B\u0D1F\u0D4D", // ooTuh
-		instrumental: "\u0D3E\u0D7D", // aal
-		adessiveSuffix: "\u0D47\u0D7D" // eel
-	};
+	const isRetroflexNasalStem = /^(.*)\u0D7A$/u;
+	const isDentalLabialStem = /^(.*)\u0D7D$/u;
+	const isDentalTrillStem = /^(.*)\u0D7C$/u;
+	let toReturn = {};
 	
 	if (isAnStem.test(noun.singular))
 	{
 		/* Stems */
-		toReturn.nonNominativeStem.allOthers = noun.singular.replace(isAnStem, "$1\u0D28"); // Replace the chillu with a regular dental n
-
-		/* Increments (none) */
-
-		/* Suffixes */
-		toReturn.genitive = "\u0D31\u0D4D\u0D31\u0D46"; // tt(alveolar), followed by -e matra
-		toReturn.dative.push("\u0D4D\u0D28\u0D4D"); // Dental n followed by schwa
-		toReturn.dative.push("\u0D4D"); // Schwa
+		toReturn = {
+			type: "-\u0D7B", // Alveolar nasal chillu
+			nominative: noun.singular,
+			stems: {
+				nonNominative: noun.singular.replace(isAnStem, "$1\u0D28"), // Replace the chിൽlu with a regular ന
+			},
+			suffixes: {
+				accusative: "\u0D46", // െ
+				genitive: "\u0D31\u0D4D\u0D31\u0D46", // റ്റെ
+				dative: [
+					"\u0D4D\u0D28\u0D4D", // ന്
+					"\u0D4D" // ്
+				],
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // ോട്
+				instrumental: "\u0D3E\u0D7D", // ാൽ
+				adessive: "\u0D47\u0D7D" // േൽ
+			}
+		};
 	}
 
-	else if (isAmStem.test(noun.singular)
+	else if (isAmStem.test(noun.singular))
 	{
-		/* Stems */
-		toReturn.nonNominativeStem.allOthers = noun.singular.replace(isAmStem, "$1"); // Remove the final anusvara
-		toReturn.nonNominativeStem.genitive.firstVariant = noun.singular; // Am-stem's nominative and genitive stems are identical
-
-		/* Increments */
-		toReturn.increment.obligatory = "\u0D24\u0D4D\u0D24";  // tt
-		toReturn.increment.optional = "\u0D3F\u0D28"; // in
-
-		/* Suffixes */
-		toReturn.genitive = "\u0D31\u0D4D\u0D31\u0D46"; // tt(alveolar)e
-		toReturn.dative.push("\u0D28\u0D4D"); // n-schwa
-		toReturn.dative.push("\u0D4D"); // Schwa
-		toReturn.locative.push("\u0D4D"); // AM-stems also have a locative that's just a schwa
+		toReturn = {
+			type: "-\u0D02", // Anusvara
+			nominative: noun.singular,
+			stems: {
+				genitive: noun.singular, // Am-stem's nominative and genitive stems are identical
+				other: noun.singular.replace(isAmStem, "$1") // Remove the final anusvara
+			},
+			increments: {
+				obligatory: "\u0D24\u0D4D\u0D24",  // ത്ത്
+				optional: "\u0D3F\u0D28" // ിന്
+			},
+			suffixes: {
+				accusative: "\u0D46", // െ
+				genitive: "\u0D31\u0D4D\u0D31\u0D46", // റ്റെ
+				dative: [ // 2 alternatives
+					"\u0D28\u0D4D", // ന്
+					"\u0D4D" // ്
+				],
+				locative: [
+					"\u0D3F\u0D7D", // ിൽ
+					"\u0D4D" // AM-stems also have a locative that's just a schwa
+				],
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
 	}
 
 	else if (isRuhStem.test(noun.singular)) // Double
 	{
-		/* Stems */
-		toReturn.nonNominativeStem.genitive.firstVariant = noun.singular.replace(isRuhStem, "$1\u0D31"); // The genitive stem ends with a bare /r/
-		toReturn.nonNominativeStem.allOthers = noun.singular.replace(isRuhStem, "$1\u0D31\u0D4D\u0D31"); // The non-genitive cases also use a doubled /t:/
-
-		/* Increments */
-		toReturn.increment.otherNonNominative = "\u0D3F\u0D28"; // -in
-
-		/* Suffixes */
-		toReturn.genitive = "\u0D31\u0D4D\u0D31\u0D46"; // /t(alveolar)e/
-		toReturn.dative.push("\u0D28\u0D4D"); // n-schwa
-		toReturn.dative.push("\u0D4D"); // Schwa
+		toReturn = {
+			type: "-\u0D31\u0D4D", // Alveolar trill followed by a schwa
+			nominative: noun.singular,
+			stems: {
+				genitive: noun.singular.replace(isRuhStem, "$1\u0D31"), // The genitive stem ends with a bare /r/
+				other: noun.singular.replace(isRuhStem, "$1\u0D31\u0D4D\u0D31") // The non-genitive cases also use a doubled /t:/
+			},
+			increments: {
+				nonNominative:"\u0D3F\u0D28" // -ിന്
+			},
+			suffixes: {
+				accusative: "\u0D46", // െ
+				genitive:"\u0D31\u0D4D\u0D31\u0D46", // -റ്റെ
+				dative: [ // 2 alternatives
+					"\u0D28\u0D4D", // -ന്
+					"\u0D4D" // -്
+				],
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
 	}
 
 	else if (isDuhStem.test(noun.singular))
 	{
-		/* Stems */
-		toReturn.nonNominativeStem.genitive.firstVariant = noun.singular.replace(isDuhStem, "$1\u0D1F"); // The genitive stem ends with a bare /T/
-		toReturn.nonNominativeStem.allOthers = noun.singular.replace(isDuhStem, "$1\u0D1F\u0D4D\u0D1F"); // The non-genitive cases also use a doubled /T:/
-
-		/* Increments */
-		toReturn.increment.otherNonNominative = "\u0D3F\u0D28"; // -in
-
-		/* Suffixes */
-		toReturn.genitive = "\u0D31\u0D4D\u0D31\u0D46"; // /t(alveolar)e/
-		toReturn.dative.push("\u0D28\u0D4D"); // n-schwa
-		toReturn.dative.push("\u0D4D"); // Schwa
+		toReturn = {
+			type: "-\u0D1F\u0D4D", // Unvoiced unaspirated retroflex stop followed by a schwa
+			nominative: noun.singular,
+			stems: {
+				genitive: noun.singular.replace(isDuhStem, "$1\u0D1F"), // The genitive stem ends with a bare /T/
+				other: noun.singular.replace(isDuhStem, "$1\u0D1F\u0D4D\u0D1F") // The non-genitive cases also use a doubled /T:/
+			},
+			increments: {
+				nonLocative:"\u0D3F\u0D28" // -ിന്
+			},
+			suffixes: {
+				accusative: "\u0D46", // -െ
+				genitive:"\u0D31\u0D4D\u0D31\u0D46", // -റ്റെ
+				dative: [
+					"\u0D28\u0D4D", // ന്
+					"\u0D4D" // ്
+				],
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
 	}
 
 	else if (isALStem.test(noun.singular))
 	{
-		/* Stems */
-		toReturn.nonNominativeStem.dative = noun.singular; // The dative stem is the same as the nominative stem
-		toReturn.nonNominativeStem.allOthers = noun.singular.replace(isALStem, "$1\u0D33"); // Replace the chillu with a non-chillu
-
-		/* Increments (none) */
-
-		/* Suffixes */
-		toReturn.genitive = "\u0D41\u0D1F\u0D46"; // uTe
-		toReturn.dative.push("\u0D15\u0D4D\u0D15\u0D4D"); // kkuh
+		toReturn = {
+			type: "-\u0D7E", // Chillu retroflex labial
+			nominative: noun.singular,
+			stems: {
+				dative: noun.singular, // The dative stem is the same as the nominative stem
+				other: noun.singular.replace(isALStem, "$1\u0D33") // Replace the chillu with a non-chillu
+			},
+			suffixes: {
+				accusative: "\u0D46", // െ
+				genitive: "\u0D41\u0D1F\u0D45", // -ുടെ
+				dative: "\u0D15\u0D4D\u0D15\u0D4D", // -ക്ക്
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
 	}
 
 	else if (isSchwaStem.test(noun.singular))
 	{
-		/* Stems (none) */
-
-		/* Increments */
-		toReturn.otherNonNominative = "\u0D3F\u0D28"; // in
-
-		/* Cases */
-		toReturn.genitive = "\u0D31\u0D4D\u0D31\u0D46"; // tt(alveolar)e
-		toReturn.dative.push("\u0D28\u0D4D"); // n-schwa
-		toReturn.dative.push("\u0D4D"); // Schwa
+		toReturn = declineSingularSchwaStem(noun);
 	}
 
+	else if (isRetroflexNasalStem.test(noun.singular))
+	{
+		toReturn = {
+			type: "-\u0D7A", // Retroflex nasal
+			nominative: noun.singular,
+			increments: {
+				nonLocative: "\u0D3F\u0D28" // -ിന്
+			},
+			stems: {
+				nonNominative: noun.singular.replace(isRetroflexNasalStem, "$1\u0D23") // Replace the chillu with a regular retroflex nasal
+			},
+			suffixes: {
+				accusative: "\u0D46",
+				genitive: "\u0D31\u0D4D\u0D31\u0D46",
+				dative: [
+					"\u0D28\u0D4D", // ന്
+					"\u0D4D" // ്
+				],
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
+	}
+
+	else if (isDentalTrillStem.test(noun.singular))
+	{
+		toReturn = {
+			type: "-\u0D7C", // Chillu dental trill
+			nominative: noun.singular,
+			increments: {
+				nonLocative: "\u0D3F\u0D28" // -ിന്
+			},
+			stems: {
+				nonNominative: noun.singular.replace(isDentalTrillStem, "$1\u0D30") // Replace the chillu with a regular ര
+			},
+			suffixes: {
+				accusative: "\u0D46",
+				genitive: "\u0D31\u0D4D\u0D31\u0D46",
+				dative: [
+					"\u0D28\u0D4D", // ന്
+					"\u0D4D" // ്
+				],
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
+	}
+
+	else if (isDentalLabialStem.test(noun.singular))
+	{
+		toReturn = {
+			type: "-\u0D7D", // Chillu dental labial
+			nominative: noun.singular,
+			increments: {
+				nonLocative: "\u0D3F\u0D28" // -ിന്
+			},
+			stems: {
+				nonNominative: noun.singular.replace(isDentalLabialStem, "$1\u0D32") // Replace the chillu with a regular ല
+			},
+			suffixes: {
+				accusative: "\u0D46",
+				genitive: "\u0D31\u0D4D\u0D31\u0D46",
+				dative: [
+					"\u0D28\u0D4D", // ന്
+					"\u0D4D" // ്
+				],
+				locative: "\u0D3F\u0D7D", // ിൽ
+				sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+				instrumental: "\u0D3E\u0D7D", // -ാൽ
+				adessive: "\u0D47\u0D7D" // -േൽ
+			}
+		};
+	}
+
+	/* TODO: replace the code below with code that replaces toReturn with a new object taിൽored to the stem type, as above. */
 	else if (isSyllabicRStem.test(noun.singular))
 	{
 		/*
 		*  3 different declensions are possible:
 		* 1) Front-vowel stem.
 		* 2) Back-vowel stem.
-		* 3) Schwa-stem.
+		* 3) ്Schwa-stem.
 		* So we need to return an array of the possible declensions.
 		*/
 		toReturn = [
-			{
-			},
-
-			{
-			},
-
-			{
-			}
+			declineSingularFrontVowelStem(noun),
+			declineSingularBackVowelStem(noun),
+			declineSingularSchwaStem(noun)
 		];
 	}
 	
@@ -526,54 +707,51 @@ function declineSingular(noun)
 
 		if (isAStem.test(noun.singular))
 		{
-			/* Stem */
-			toReturn.nonNominativeStem.dative = noun.singular + "\u0D2F\u0D4D"; // Add a /j/ and a viraama
-			toReturn.nonNominativeStem.allOthers = noun.singular + "\u0D2F"; // Add a /j/
-
-			/* Increment (none) */
-
-			/* Cases */
-			toReturn.genitive = "\u0D41\u0D1F\u0D46"; // uTe
-			toReturn.dative.push("\u0D15\u0D4D\u0D15\u0D4D"); // kkuh
+			toReturn = {
+				type: "a", // A-stem
+				nominative: noun.singular,
+				stems: {
+					dative: noun.singular + "\u0D2F\u0D4D", // Add a /j/ and a viraama
+					other: noun.singular + "\u0D2F" // Add a /j/
+				},
+				suffixes: {
+					accusative: "\u0D46",
+					genitive: "\u0D41\u0D1F\u0D46", // uTe
+					dative: "\u0D15\u0D4D\u0D15\u0D4D", // kkuh
+					locative: "\u0D3F\u0D7D", // ിൽ
+					sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+					instrumental: "\u0D3E\u0D7D", // -ാൽ
+					adessive: "\u0D47\u0D7D" // -േൽ
+				}
+			};
 		}
 
 		else if (isFrontStem.test(noun.singular))
 		{
-			/* Stem */
-			toReturn.nonNominativeStem.dative = noun.singular; // The dative uses the regular singular stem
-			toReturn.nonNominativeStem.allOthers = noun.singular + "\u0D2F"; // Front-vowel stems add a /j/ before all other case endings in the singular
-			
-			/* Increment (none) */
-
-			/* Cases */
-			toReturn.genitive = "\u0D41\u0D1F\u0D46"; // uTe
-			toReturn.dative.push("\u0D15\u0D4D\u0D15\u0D4D"; // kkuh
+			toReturn = declineSingularFrontVowelStem(noun);
 		}
 	
 		else // Back-vowel stem
 		{
-			// Return a new structure, because 2 different declensions are possible
-			toReturn = [
-				/* First declension */
-				{
-				},
-
-				/* Second declension */
-				{
-				}
-			];
+			toReturn = declineSingularBackVowelStem(noun);
 		}
 	}
 	
 	return toReturn;
 }
 
-module.exports.GetDeclensions = async (req, res, next) {
+module.exports.GetDeclensions = async (req, res, next) => {
 	try
 	{
 		const noun = await Noun.findOne({ _id: req.params.id});
 		console.log("GetDeclensions: declining %o", noun);
 		const singularDeclensions = declineSingular(noun);
+		// TODO: Handle plural declensions, because they're complex
+		res.status(200).json(
+			{
+				singular: singularDeclensions
+			}
+		);
 	}
 
 	catch (e)
