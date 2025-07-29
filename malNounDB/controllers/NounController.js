@@ -124,23 +124,192 @@ function addKalToNeuterNoun(singularForm)
 
 	if (endsInAm.test(singularForm))
 	{
-		return singularForm.replace(endsInAm, "$1\u0D19\u0D4D\u0D19\u0D7E"); // Replace -am with -angngaL
+		return {
+			pluralStem: singularForm.replace(endsInAm, "$1"),
+			pluralSuffix: "\u0D19\u0D4D\u0D19\u0D7E" // Replace -am with -angngaL
+		};
 	}
 
 	else if (endsInShortUOrLongVowel.test(singularForm))
 	{
-		return singularForm + "\u0D15\u0D4D\u0D15\u0D7E"; // Add -kkaL
+		return {
+			pluralStem: singularForm,
+			pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // Add -kkaL
+		};
 	}
 
 	else if (endsInSchwa.test(singularForm))
 	{
-		return singularForm.replace(endsInSchwa, "$1\u0D41\u0D15\u0D7E"); // Replace the schwa with an -u, then add -kaL
+		return {
+			pluralStem: singularForm.replace(endsInSchwa, "$1\u0D41"), // Replace the schwa with an -u
+			pluralSuffix: "\u0D15\u0D7E" // -kaL
+		};
 	}
 
 	else // Default
 	{
-		return singularForm + "\u0D15\u0D7E"; // Add -kaL
+		return {
+			pluralStem: singularForm,
+			pluralSuffix: "\u0D15\u0D7E" // Add -kaL
+		};
 	}	
+}
+
+function getPlural(noun)
+{
+	const endsInSchwa = /^(.*[\u0D15-\u0D3A])\u0D4D/u; // A noun that ends in a consonant followed by a schwa
+	const endsInLongAOrSyllabicRReg = /^.*[\u0D3E|\u0D43]$/u;
+	const endsInAnOrIReg = /^(.*)[\u0D7B|\u0D3F]$/u;
+	const endsInKaaranReg = /^(.*)\u0D15\u0D3E\u0D30\u0D7B/u;
+	const endsInAReg = /^.*[\u0D15-\u0D3A]$/u; // Any noun that ends in a consonant without a matra
+	const endsInIReg = /^.*\u0D3F$/u; // Any noun that ends in a short i-matra
+	const endsInKaariReg = /^(.*)[\u0D15\u0D3E\u0D30\u0D3F]$/u; // Any noun that ends in -kaari
+	const endsInAn = /^.*\u0D7B$/u;	 // A noun that ends in a chillu alveolar nasal
+
+	if (noun.human) // The noun refers to a human entity
+	{
+		if (noun.pluralOptional) // The noun has an optional plural
+		{
+			return {
+				optional: true,
+				plural: noun.plural
+			};
+		}
+
+		else if (!noun.hasPlural) // The noun has no plural
+		{
+			return {
+				hasPlural: false
+			};
+		}
+
+		else if (noun.denotesYoungChild) // These all add variants of -kaL
+		{
+			if (endsInSchwa.test(noun.singular))
+			{
+				return {
+					pluralStem: noun.singular.replace(endsInSchwa, "$1"), // The plural stem is the stem without the schwa
+					pluralSuffix: "\u0D41\u0D19\u0D4D\u0D19\u0D7E" // - ungngaL
+				};
+			}
+
+			else // Append -kaL
+			{
+				return {
+					pluralSuffix: "\u0D15\u0D7E" // kaL
+				};
+			}
+		}
+
+		else // Generate this [+HUM] noun's plural
+		{
+			if (noun.gender == "masculine")
+			{
+				if (endsInLongAOrSyllabicRReg.test(noun.singular)) 
+				{
+					return {
+						pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // -kkaL
+					};
+				}
+
+				else if (endsInKaaranReg.test(noun.singular)) // 2 possible plurals
+				{
+					return {
+						epicenePlural: noun.singular.replace(endsInKaaranReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
+					};
+				}
+
+				else if (!endsInKaaranReg.test(noun.singular) && endsInAnOrIReg.test(noun.singular)) // This is a noun that ends in -an or -i, but not -kaaran or -kaari
+				{
+					return {
+						epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
+					};
+				}
+
+				else
+				{
+					return {
+						pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
+					};
+				}
+			}
+
+			else if (noun.gender == "feminine")
+			{
+
+				if (endsInAReg.test(noun.singular)) // This is a feminine noun that ends in /a/
+				{
+					return {
+						pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
+					};
+				}
+
+				else if (endsInIReg.test(noun.singular)) // A feminine noun that ends in /i/
+				{
+					return {
+						pluralSuffixes: [ // 2 possibilities in free variation
+							"\u0D2E\u0D3E\u0D7C", // maar
+							"\u0D15\u0D7E" // kaL
+						]
+					};
+				}
+
+				else if (endsInLongAOrSyllabicRReg.test(noun.singular))
+				{
+					return {
+						pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // kkaL
+					};
+				}
+
+				else if (endsInKaariReg.test(noun.singular)) // 2 plurals - epicene & all-fem
+				{
+					return {
+						epicenePlural: noun.singular.replace(endsInKaariReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
+					};
+				}
+
+				else if (!endsInKaariReg.test(noun.singular) && endsInAnOrIReg.test(noun.singular)) // This is a noun that ends in -an or -i, but not -kaaran or -kaari
+				{
+					return {
+						epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
+					};
+				}
+
+				else // All other feminine nouns
+				{
+					return {
+						pluralSuffix: "\u0D15\u0D7E" // kaL
+					};
+				}
+			} // feminine
+		}
+	}
+
+	else if (!noun.human && noun.animate) // The noun is [-HUM], but [+ANIM]
+	{
+
+		if (endsInAn.test(noun.singular)) // A few nouns that are [-HUM] but end in -an
+		{
+			return {
+				pluralSuffix: "\u0D2E\u0D3E\u0D7C" // -maar
+			};
+		}
+
+		else // -kaL and variants
+		{
+			return addKalToNeuterNoun(noun.singular);
+		}
+	}
+
+	else // Neither [+HUM] nor [+ANIM]
+	{
+		console.log("GetPlural: the noun is neither human nor animate.");
+		return addKalToNeuterNoun(noun.singular);
+	}
 }
 
 module.exports.GetPlural = async (req, res, next) => {
@@ -148,201 +317,10 @@ module.exports.GetPlural = async (req, res, next) => {
 	{
 		const noun = await Noun.findOne({ _id: req.params.id});
 		console.log("GetPlural: pluralizing %o", noun);
+		res.status(200).json(
+			getPlural(noun)
+		);
 		
-		if (noun.human) // The noun refers to a human entity
-		{
-			if (noun.pluralOptional) // The noun has an optional plural
-			{
-				res.status(200).json(
-					{
-						optional: true,
-						plural: noun.plural
-					}
-				);
-			}
-
-			else if (!noun.hasPlural) // The noun has no plural
-			{
-				res.status(200).json(
-					{
-						hasPlural: false
-					}
-				);
-			}
-
-			else if (noun.denotesYoungChild) // These all add variants of -kaL
-			{
-				const endsInSchwa = /^(.*[\u0D15-\u0D3A])\u0D4D/u; // A noun that ends in a consonant followed by a schwa
-				
-				if (endsInSchwa.test(noun.singular))
-				{
-					res.status(200).json(
-						{
-							pluralStem: noun.singular.replace(endsInSchwa, "$1"), // The plural stem is the stem without the schwa
-							pluralSuffix: "\u0D41\u0D19\u0D4D\u0D19\u0D7E" // - ungngaL
-						}
-					);
-				}
-
-				else // Append -kaL
-				{
-					res.status(200).json(
-						{
-							pluralSuffix: "\u0D15\u0D7E" // kaL
-						}
-					);
-				}
-			}
-
-			else // Generate this [+HUM] noun's plural
-			{
-				const endsInLongAOrSyllabicRReg = /^.*[\u0D3E|\u0D43]$/u;
-				const endsInAnOrIReg = /^(.*)[\u0D7B|\u0D3F]$/u;
-
-				if (noun.gender == "masculine")
-				{
-					const endsInKaaranReg = /^(.*)\u0D15\u0D3E\u0D30\u0D7B/u;
-
-					if (endsInLongAOrSyllabicRReg.test(noun.singular)) 
-					{
-						res.status(200).json(
-							{
-								pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // -kkaL
-							}
-						);
-					}
-
-					else if (endsInKaaranReg.test(noun.singular)) // 2 possible plurals
-					{
-						res.status(200).json(
-							{
-								epicenePlural: noun.singular.replace(endsInKaaranReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
-								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
-							}
-						);
-					}
-
-					else if (!endsInKaaranReg.test(noun.singular) && endsInAnOrIReg.test(noun.singular)) // This is a noun that ends in -an or -i, but not -kaaran or -kaari
-					{
-						res.status(200).json(
-							{
-								epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
-								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
-							}
-						);
-					}
-
-					else
-					{
-						res.status(200).json(
-							{
-								pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
-							}
-						);
-					}
-				}
-
-				else if (noun.gender == "feminine")
-				{
-					const endsInAReg = /^.*[\u0D15-\u0D3A]$/u; // Any noun that ends in a consonant without a matra
-					const endsInIReg = /^.*\u0D3F$/u; // Any noun that ends in a short i-matra
-					const endsInKaariReg = /^(.*)[\u0D15\u0D3E\u0D30\u0D3F]$/u; // Any noun that ends in -kaari
-
-					if (endsInAReg.test(noun.singular)) // This is a feminine noun that ends in /a/
-					{
-						res.status(200).json(
-							{
-								pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
-							}
-						);
-					}
-
-					else if (endsInIReg.test(noun.singular)) // A feminine noun that ends in /i/
-					{
-						res.status(200).json(
-							{
-								pluralSuffixes: [ // 2 possibilities in free variation
-									"\u0D2E\u0D3E\u0D7C", // maar
-									"\u0D15\u0D7E" // kaL
-								]
-							}
-						);
-					}
-
-					else if (endsInLongAOrSyllabicRReg.test(noun.singular))
-					{
-						res.status(200).json(
-							{
-								pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // kkaL
-							}
-						);
-					}
-
-					else if (endsInKaariReg.test(noun.singular)) // 2 plurals - epicene & all-fem
-					{
-						res.status(200).json(
-							{
-								epicenePlural: noun.singular.replace(endsInKaariReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
-								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
-							}
-						);
-					}
-
-					else if (!endsInKaariReg.test(noun.singular) && endsInAnOrIReg.test(noun.singular)) // This is a noun that ends in -an or -i, but not -kaaran or -kaari
-					{
-						res.status(200).json(
-							{
-								epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
-								allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
-							}
-						);
-					}
-
-					else // All other feminine nouns
-					{
-						res.status(200).json(
-							{
-								pluralSuffix: "\u0D15\u0D7E" // kaL
-							}
-						);
-					}
-				} // feminine
-			}
-		}
-
-		else if (!noun.human && noun.animate) // The noun is [-HUM], but [+ANIM]
-		{
-			const endsInAn = /^.*\u0D7B$/u;	 // A noun that ends in a chillu alveolar nasal
-
-			if (endsInAn.test(noun.singular)) // A few nouns that are [-HUM] but end in -an
-			{
-				res.status(200).json(
-					{
-						pluralSuffix: "\u0D2E\u0D3E\u0D7C" // -maar
-					}
-				);
-			}
-
-			else // -kaL and variants
-			{
-				res.status(200).json(
-					{
-						plural: addKalToNeuterNoun(noun.singular)
-					}
-				);
-			}
-		}
-
-		else // Neither [+HUM] nor [+ANIM]
-		{
-			console.log("GetPlural: the noun is neither human nor animate.");
-
-			res.status(200).json(
-				{
-					plural: addKalToNeuterNoun(noun.singular)
-				}
-			);
-		}
 	}
 
 	catch (e)
@@ -414,7 +392,7 @@ const isSchwaStem = /^(.*[\u0D15-\u0D3A])\u0D4D$/u;
 
 function declineSingularSchwaStem(noun)
 {
-	toReturn = {
+	return {
 		type: "-്\u0D4D", // Schwa
 		nominative: noun.singular,
 		increments: {
@@ -455,12 +433,14 @@ function declineSingular(noun)
 	const isRuhStem = /^(.*)\u0D31\u0D4D$/u;
 	const isDuhStem = /^(.*)\u0D1F\u0D4D$/u;
 	const isALStem = /^(.*)\u0D7E$/u;
-	//const isSchwaStem = /^(.*[\u0D15-\u0D3A])\u0D4D$/u;
+	const isSchwaStem = /^(.*[\u0D15-\u0D3A])\u0D4D$/u;
 	const isSyllabicRStem = /^(.*)([\u0D43-\u0D44])$/u;
 	const isRetroflexNasalStem = /^(.*)\u0D7A$/u;
 	const isDentalLabialStem = /^(.*)\u0D7D$/u;
 	const isDentalTrillStem = /^(.*)\u0D7C$/u;
 	let toReturn = {};
+
+	console.log("declineSingular: noun = %o\n\tisSchwaStem.test(noun.singular) = %o", noun, isSchwaStem.test(noun.singular));
 	
 	if (isAnStem.test(noun.singular))
 	{
@@ -594,7 +574,9 @@ function declineSingular(noun)
 
 	else if (isSchwaStem.test(noun.singular))
 	{
+		console.log("isSingular: declining the schwa stem %o", noun.singular);
 		toReturn = declineSingularSchwaStem(noun);
+		console.log("isSingular: toReturn = %o after calling declineSingularSchwaStem", toReturn);
 	}
 
 	else if (isRetroflexNasalStem.test(noun.singular))
@@ -736,20 +718,145 @@ function declineSingular(noun)
 			toReturn = declineSingularBackVowelStem(noun);
 		}
 	}
-	
+
+	console.log("declineSingular: returning %o", toReturn);	
 	return toReturn;
+}
+
+function genPluralNonNominativeStem(pluralNominative)
+{
+	const removeChilluRetroflexLateral = /^(.*)\u0D7E$/u; // Matches a noun that ends in a chillu retroflex lateral, and saves the noun's stem up to the lateral
+	const removeChilluDentalTrill = /^(.*)\u0D7C$/u; // Matches a noun that ends in a chillu dental trill, and saves the noun's stem up to the trill
+
+	if (removeChilluRetroflexLateral.test(pluralNominative)) // Need to change the chillu retroflex lateral to a regular retroflex lateral letter for non-accusative cases
+	{
+		return pluralNominative.replace(removeChilluRetroflexLateral, "$1\u0D33"); // Replace the chillu with a regular letter
+	}
+
+	else if (removeChilluDentalTrill.test(pluralNominative))
+	{
+		return pluralNominative.replace(removeChilluDentalTrill, "$1\u0D30"); // Replace the chillu with a regular dental trill
+	}
+
+	else // ??
+	{
+		return undefined;
+	}
+}
+
+function declinePlural(noun)
+{
+	const pluralData = getPlural(noun);
+	const caseSuffixes = { // All plurals decline with the same case suffixes
+		accusative: "\u0D46",
+		genitive: "\u0D41\u0D1F\u0D46", // uTe
+		dative: "\u0D15\u0D4D\u0D15\u0D4D", // kkuh
+		locative: "\u0D3F\u0D7D", // ിൽ
+		sociative: "\u0D4B\u0D1F\u0D4D", // -ോട്
+		instrumental: "\u0D3E\u0D7D", // -ാൽ
+		adessive: "\u0D47\u0D7D" // -േൽ
+	};
+	
+	if (pluralData.hasOwnProperty("optional")) // A noun with an optional plural
+	{
+		const pluralNominative = pluralData.plural; // We have the plural nominative form
+
+		return {
+			nominative: pluralNominative,
+			stems: {
+				other: genPluralNonNominativeStem(pluralNominative)
+			},
+			suffixes: caseSuffixes
+		};
+	}
+
+	else if (pluralData.hasOwnProperty("hasPlural"))
+	{
+		if (!pluralData.hasPlural)
+		{
+			return null;
+		}
+	}
+
+	else if (Object.keys(pluralData).length == 1 && pluralData.hasOwnProperty("pluralSuffix")) // There's only 1 plural, and it's formed by adding a suffix to the singular nominative
+	{
+		const pluralNominative = noun.singular + pluralData.pluralSuffix; // Form the plural by suffixing the suffix to the noun's singular nominative form
+		
+		return {
+			nominative: pluralNominative,
+			stems: {
+				other: genPluralNonNominativeStem(pluralNominative)
+			},
+			suffixes: caseSuffixes
+		};
+	}
+
+	else if (pluralData.hasOwnProperty("pluralSuffix") && pluralData.hasOwnProperty("pluralStem")) // A noun that has a different plural stem, not just a different suffix
+	{
+		const pluralNominative = pluralData.pluralStem + pluralData.pluralSuffix; // Form the plural using the special stem and the suffix
+		
+		return {
+			nominative: pluralNominative,
+			stems: {
+				other: genPluralNonNominativeStem(pluralNominative)
+			},
+			suffixes: caseSuffixes
+		};
+	}
+
+	else if (pluralData.hasOwnProperty("pluralSuffixes")) // A noun with multiple plurals
+	{
+		let toReturn = [];
+
+		for (pluralSuffix in pluralData.pluralSuffixes) // Generate a nominative for each suffix
+		{
+			const pluralNominative = noun.singular + pluralSuffix;
+			toReturn.push(
+				{
+					nominative: pluralNominative,
+					stems: {
+						other: genPluralNonNominativeStem(pluralNominative)
+					},
+					suffixes: caseSuffixes
+				}
+			);
+		}
+
+		return toReturn;
+	}
+
+	else // 2 possible plurals for a human noun - epicene & all-same-gender
+	{
+		return [
+			/* Epicene plural */
+			{
+				nominative: pluralData.epicenePlural,
+				stems: {
+					other: genPluralNonNominativeStem(pluralData.epicenePlural)
+				},
+				suffixes: caseSuffixes
+			},
+
+			/* All-same-gender plural */
+			{
+				nominative: pluralData.allSameGenderPlural,
+				stems: {
+					other: genPluralNonNominativeStem(pluralData.allSameGenderPlural)
+				},
+				suffixes: caseSuffixes
+			}
+		];
+	}
 }
 
 module.exports.GetDeclensions = async (req, res, next) => {
 	try
 	{
 		const noun = await Noun.findOne({ _id: req.params.id});
-		console.log("GetDeclensions: declining %o", noun);
-		const singularDeclensions = declineSingular(noun);
-		// TODO: Handle plural declensions, because they're complex
 		res.status(200).json(
 			{
-				singular: singularDeclensions
+				singular: declineSingular(noun),
+				plural: declinePlural(noun)
 			}
 		);
 	}
