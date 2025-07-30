@@ -3,6 +3,7 @@ import LoginView from "../views/LoginView.vue";
 import HomeView from "../views/HomeView.vue";
 import CreateView from "../views/CreateView.vue";
 import EditView from "../views/EditView.vue";
+import DeclensionView from "../views/DeclensionView.vue";
 
 import { useUserStore } from "../stores/UserStore";
 
@@ -44,6 +45,16 @@ const routeArr = [
 		component: EditView,
 		meta: {
 			requiresAuth: true,
+			optionalAuth: false
+		}
+	},
+
+	{
+		path: "/declension/:id",
+		name: "Declension",
+		component: DeclensionView,
+		meta: {
+			requiresAuth: false,
 			optionalAuth: false
 		}
 	}

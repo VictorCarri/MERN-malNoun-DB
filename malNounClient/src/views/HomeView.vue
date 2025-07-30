@@ -16,9 +16,9 @@ const userName = computed(() => store.state.userName);*/
 		Loading noun data...
 	</div>
 	<div v-else>
-		<BAlert v-show="showLogoutAlert" variant="success">
+		<b-alert v-show="showLogoutAlert" variant="success">
 			Successfully logged you out!
-		</BAlert>
+		</b-alert>
 		<b-alert v-show="showDeletionAlert" variant="success">
 			Successfully deleted the noun {{ deletedNoun.singular }}.
 		</b-alert>
@@ -30,91 +30,93 @@ const userName = computed(() => store.state.userName);*/
 			<h2>Editable list of nouns</h2>
 		</div>
 		<h2 v-else>List of nouns</h2>
-		<BContainer fluid>
-			<BRow fluid>
-				<BCol>
+		<b-container fluid>
+			<b-row fluid>
+				<b-col>
 					<h3>
 						Animate?
 					</h3>
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					<h3>
 						Gender
 					</h3>
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					<h3>
 						Human?
 					</h3>
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					<h3>
 						Singular
 					</h3>
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					<h3>
 						Meanings
 					</h3>
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					<h3>
 						Special Plural forms
 					</h3>
-				</BCol>
-			</BRow>
-			<BRow v-for="(noun, nounIndex) in nouns" :key="noun._id" fluid>
-				<BCol>
+				</b-col>
+			</b-row>
+			<b-row v-for="(noun, nounIndex) in nouns" :key="noun._id" fluid>
+				<b-col>
 					{{ noun.animate ? "Animate" : "Inanimate"  }}
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					{{ 
 						noun.gender.charAt(0).toUpperCase() + noun.gender.slice(1)
 					}}
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
 					{{ noun.human ? "Human" : "Non-human" }}
-				</BCol>
-				<BCol>
-					{{ noun.singular }}
-				</BCol>
-				<BCol>
+				</b-col>
+				<b-col>
+					<b-link :to="`declension/${noun._id}`">
+						{{ noun.singular }}
+					</b-link>
+				</b-col>
+				<b-col>
 					<ol>
 						<li v-for="(meaning, index) in noun.meanings" :key="index">
 							{{ meaning }}
 						</li>
 					</ol>
-				</BCol>
-				<BCol v-if="Object.hasOwn(noun, 'plural')"> <!-- The noun has a special plural -->
+				</b-col>
+				<b-col v-if="Object.hasOwn(noun, 'plural')"> <!-- The noun has a special plural -->
 					{{ noun.plural }}
-				</BCol>
-				<BCol v-if="userData.isLoggedIn">
-					<BButton @click="onEdit(noun)">
+				</b-col>
+				<b-col v-if="userData.isLoggedIn">
+					<b-button @click="onEdit(noun)">
 						Edit
-					</BButton>
-				</BCol>
-				<BCol v-if="userData.isLoggedIn">
-					<BButton variant="danger" @click="onDelete(noun)">
+					</b-button>
+				</b-col>
+				<b-col v-if="userData.isLoggedIn">
+					<b-button variant="danger" @click="onDelete(noun)">
 						Delete
-					</BButton>
-				</BCol>
-			</BRow>
-			<BRow v-if="userData.isLoggedIn">
-				<BCol>
-					<BButton @click="onCreate">
+					</b-button>
+				</b-col>
+			</b-row>
+			<b-row v-if="userData.isLoggedIn">
+				<b-col>
+					<b-button @click="onCreate">
 						Add a new noun
-					</BButton>
-				</BCol>
-				<BCol>
-					<BButton @click="onLogout">
+					</b-button>
+				</b-col>
+				<b-col>
+					<b-button @click="onLogout">
 						Logout
-					</BButton>
-				</BCol>
-			</BRow>
-		</BContainer>
-		<BContainer v-if="!userData.isLoggedIn">
-			Please <BLink to="/login">login</BLink> to edit nouns.
-		</BContainer>
+					</b-button>
+				</b-col>
+			</b-row>
+		</b-container>
+		<b-container v-if="!userData.isLoggedIn">
+			Please <b-link to="/login">login</b-link> to edit nouns.
+		</b-container>
 	</div>
   </main>
 </template>
@@ -224,6 +226,7 @@ export default {
 			});
 		}
 	},
+
 	mounted()
 	{
 		console.log("Store object: %o\n\tNoun store getter: %o", this.nounData, this.nounData.getNounAPIURL);

@@ -126,7 +126,10 @@ function addKalToNeuterNoun(singularForm)
 	{
 		return {
 			pluralStem: singularForm.replace(endsInAm, "$1"),
-			pluralSuffix: "\u0D19\u0D4D\u0D19\u0D7E" // Replace -am with -angngaL
+			pluralSuffix: {
+				nominative: "\u0D19\u0D4D\u0D19\u0D7E", // Replace -am with -angngaL
+				other: "\u0D19\u0D4D\u0D19\u0D33" // -angngaL, but with a non-chillu
+			}
 		};
 	}
 
@@ -134,7 +137,10 @@ function addKalToNeuterNoun(singularForm)
 	{
 		return {
 			pluralStem: singularForm,
-			pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // Add -kkaL
+			pluralSuffix: {
+				nominative: "\u0D15\u0D4D\u0D15\u0D7E", // Add -kkaL
+				other: "\u0D15\u0D4D\u0D15\u0D33" // -kkaL, but with a non-chillu
+			}
 		};
 	}
 
@@ -142,7 +148,10 @@ function addKalToNeuterNoun(singularForm)
 	{
 		return {
 			pluralStem: singularForm.replace(endsInSchwa, "$1\u0D41"), // Replace the schwa with an -u
-			pluralSuffix: "\u0D15\u0D7E" // -kaL
+			pluralSuffix: {
+				nominative: "\u0D15\u0D7E", // -kaL
+				other: "\u0D15\u0D33" // kaL (non-chillu)
+			}
 		};
 	}
 
@@ -150,9 +159,32 @@ function addKalToNeuterNoun(singularForm)
 	{
 		return {
 			pluralStem: singularForm,
-			pluralSuffix: "\u0D15\u0D7E" // Add -kaL
+			pluralSuffix: {
+				nominative: "\u0D15\u0D7E", // Add -kaL
+				other: "\u0D15\u0D33" // kaL (non-chillu)
+			}
 		};
 	}	
+}
+
+function getMaarSuffix()
+{
+	return {
+		pluralSuffix: {
+			nominative: "\u0D2E\u0D3E\u0D7C", // maar
+			other: "\u0D2E\u0D3E\u0D30" // maar (non-chillu)
+		}
+	};
+}
+
+function getKalSuffix()
+{
+	return {
+		pluralSuffix: {
+			nominative: "\u0D15\u0D7E", // kaL (with chillu)
+			other: "\u0D15\u0D33" // kaL (non-chillu)
+		}
+	};
 }
 
 function getPlural(noun)
@@ -189,14 +221,20 @@ function getPlural(noun)
 			{
 				return {
 					pluralStem: noun.singular.replace(endsInSchwa, "$1"), // The plural stem is the stem without the schwa
-					pluralSuffix: "\u0D41\u0D19\u0D4D\u0D19\u0D7E" // - ungngaL
+					pluralSuffix: {
+						nominative: "\u0D41\u0D19\u0D4D\u0D19\u0D7E", // - ungngaL
+						other: "\u0D41\U0D19\u0D4D\u0D19\u0D33" // ungngaL, but with a non-chillu
+					}
 				};
 			}
 
 			else // Append -kaL
 			{
 				return {
-					pluralSuffix: "\u0D15\u0D7E" // kaL
+					pluralSuffix: {
+						nominative: "\u0D15\u0D7E", // kaL
+						other: "\u0D15\u0D33" // kaL, but with a non-chillu
+					}
 				};
 			}
 		}
@@ -208,7 +246,10 @@ function getPlural(noun)
 				if (endsInLongAOrSyllabicRReg.test(noun.singular)) 
 				{
 					return {
-						pluralSuffix: "\u0D15\u0D4D\u0D15\u0D7E" // -kkaL
+						pluralSuffix: {
+							nominative: "\u0D15\u0D4D\u0D15\u0D7E", // -kkaL
+							other: "\u0D15\u0D4D\u0D15\u0D33" // -kkaL, but with a non-chillu
+						}
 					};
 				}
 
@@ -216,7 +257,9 @@ function getPlural(noun)
 				{
 					return {
 						epicenePlural: noun.singular.replace(endsInKaaranReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
-						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
+						epicenePluralStem: noun.singular.replace(endsInKaaranReg, "$1\u0D15\u0D3E\u0D30"), // -kaar, but with a regular r, not a chillu
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C", // Add -maar for the all-masc plural
+						allSameGenderPluralStem: noun + "\u0D2E\u0D3E\u0D30" // -maar, but with a non-chillu
 					};
 				}
 
@@ -224,15 +267,15 @@ function getPlural(noun)
 				{
 					return {
 						epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
-						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-masc plural
+						epicenePluralStem: noun.singular.replace(endsINAnOrIReg, "$1\u0D30"), // -ar, but with a non-chillu r
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C", // Add -maar for the all-masc plural
+						allSameGenderPluralStem: noun + "\u0D23\u0D3E\u0D30" // -maar, but with a non-chillu
 					};
 				}
 
 				else
 				{
-					return {
-						pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
-					};
+					return getMaarSuffix();
 				}
 			}
 
@@ -241,17 +284,15 @@ function getPlural(noun)
 
 				if (endsInAReg.test(noun.singular)) // This is a feminine noun that ends in /a/
 				{
-					return {
-						pluralSuffix: "\u0D2E\u0D3E\u0D7C" // maar
-					};
+					return getMaarSuffix();
 				}
 
 				else if (endsInIReg.test(noun.singular)) // A feminine noun that ends in /i/
 				{
 					return {
 						pluralSuffixes: [ // 2 possibilities in free variation
-							"\u0D2E\u0D3E\u0D7C", // maar
-							"\u0D15\u0D7E" // kaL
+							getMaarSuffix(),
+							getKalSuffix()
 						]
 					};
 				}
@@ -267,7 +308,9 @@ function getPlural(noun)
 				{
 					return {
 						epicenePlural: noun.singular.replace(endsInKaariReg, "$1\u0D15\u0D3E\u0D7C"), // Replace -kaaran with -kaar
-						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
+						epicenePluralStem: noun.singular.replace(endsInKaariReg, "$1\u0D15\u0D3E\u0D30"), // -kaar, but with a non-chillu r
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C", // Add -maar for the all-fem plural
+						allSameGenderPluralStem: noun + "\u0D2E\u0D3E\u0D30" // -maar, but with a non-chillu r
 					};
 				}
 
@@ -275,15 +318,15 @@ function getPlural(noun)
 				{
 					return {
 						epicenePlural: noun.singular.replace(endsInAnOrIReg, "$1\u0D7C"), // Replace the final vowel with -ar
-						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C" // Add -maar for the all-fem plural
+						epicenePluralStem: noun.singular.replace(endsInAnOrIReg, "$1\u0D30"), // Replace the final vowel with -ar (non-chillu)
+						allSameGenderPlural: noun + "\u0D2E\u0D3E\u0D7C", // Add -maar for the all-fem plural
+						allSameGenderPluralStem: noun + "\u0D2E\u0D3E\u0D30" // -maar (with a non-chillu r)
 					};
 				}
 
 				else // All other feminine nouns
 				{
-					return {
-						pluralSuffix: "\u0D15\u0D7E" // kaL
-					};
+					return getKalSuffix();
 				}
 			} // feminine
 		}
@@ -294,9 +337,7 @@ function getPlural(noun)
 
 		if (endsInAn.test(noun.singular)) // A few nouns that are [-HUM] but end in -an
 		{
-			return {
-				pluralSuffix: "\u0D2E\u0D3E\u0D7C" // -maar
-			};
+			return getMaarSuffix();
 		}
 
 		else // -kaL and variants
@@ -766,7 +807,8 @@ function declinePlural(noun)
 			stems: {
 				other: genPluralNonNominativeStem(pluralNominative)
 			},
-			suffixes: caseSuffixes
+			suffixes: caseSuffixes,
+			isOptional: true
 		};
 	}
 
@@ -780,27 +822,35 @@ function declinePlural(noun)
 
 	else if (Object.keys(pluralData).length == 1 && pluralData.hasOwnProperty("pluralSuffix")) // There's only 1 plural, and it's formed by adding a suffix to the singular nominative
 	{
-		const pluralNominative = noun.singular + pluralData.pluralSuffix; // Form the plural by suffixing the suffix to the noun's singular nominative form
+		const pluralNominative = noun.singular + pluralData.pluralSuffix.nominative; // Form the plural by suffixing the suffix to the noun's singular nominative form
 		
 		return {
 			nominative: pluralNominative,
 			stems: {
+				nominative: noun.singular,
 				other: genPluralNonNominativeStem(pluralNominative)
 			},
-			suffixes: caseSuffixes
+			suffixes: {
+				cases: caseSuffixes,
+				plural: pluralData.pluralSuffix
+			}
 		};
 	}
 
 	else if (pluralData.hasOwnProperty("pluralSuffix") && pluralData.hasOwnProperty("pluralStem")) // A noun that has a different plural stem, not just a different suffix
 	{
-		const pluralNominative = pluralData.pluralStem + pluralData.pluralSuffix; // Form the plural using the special stem and the suffix
+		const pluralNominative = pluralData.pluralStem + pluralData.pluralSuffix.nominative; // Form the plural using the special stem and the suffix
 		
 		return {
 			nominative: pluralNominative,
 			stems: {
+				nominative: pluralData.pluralStem,
 				other: genPluralNonNominativeStem(pluralNominative)
 			},
-			suffixes: caseSuffixes
+			suffixes: {
+				cases: caseSuffixes,
+				plural: pluralData.pluralSuffix
+			}
 		};
 	}
 
@@ -810,14 +860,18 @@ function declinePlural(noun)
 
 		for (pluralSuffix in pluralData.pluralSuffixes) // Generate a nominative for each suffix
 		{
-			const pluralNominative = noun.singular + pluralSuffix;
+			const pluralNominative = noun.singular + pluralSuffix.nominative;
 			toReturn.push(
 				{
 					nominative: pluralNominative,
 					stems: {
+						nominative: noun.singular,
 						other: genPluralNonNominativeStem(pluralNominative)
 					},
-					suffixes: caseSuffixes
+					suffixes: {
+						cases: caseSuffixes,
+						plural: pluralSuffix
+					}
 				}
 			);
 		}
@@ -832,7 +886,7 @@ function declinePlural(noun)
 			{
 				nominative: pluralData.epicenePlural,
 				stems: {
-					other: genPluralNonNominativeStem(pluralData.epicenePlural)
+					other: pluralData.epicenePluralStem
 				},
 				suffixes: caseSuffixes
 			},
@@ -841,7 +895,7 @@ function declinePlural(noun)
 			{
 				nominative: pluralData.allSameGenderPlural,
 				stems: {
-					other: genPluralNonNominativeStem(pluralData.allSameGenderPlural)
+					other: pluralData.allSameGenderPluralStem
 				},
 				suffixes: caseSuffixes
 			}
