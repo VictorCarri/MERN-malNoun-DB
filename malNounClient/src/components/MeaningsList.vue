@@ -1,7 +1,8 @@
 <script lang="ts">
 import { BFormInput, BRow, BCol, BButton, BFormGroup } from "bootstrap-vue-next";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "MeaningsList",
 
 	data() {
@@ -12,17 +13,19 @@ export default {
 	},
 
 	methods: {
-		onAddMeaning(e)
+		onAddMeaning(e : MouseEvent)
 		{
 			console.log("Adding a meaning to the meanings list");
+			this.enteredMeanings.sort();
 			this.enteredMeanings.push("");
 			this.$emit("meaningsListChanged", this.enteredMeanings);
 		},
 
-		onDeleteMeaning(index)
+		onDeleteMeaning(index : number)
 		{
 			console.log("MeaningList.onDeleteMeaning: deleting meaning @ index %d", index);
 			this.enteredMeanings.splice(index, 1); // Remove the meaning at that index
+			this.enteredMeanings.sort();
 			this.$emit("meaningsListChanged", this.enteredMeanings);
 		}
 	},
@@ -38,16 +41,12 @@ export default {
 
 	props: {
 		initialMeanings: {
-			type: Array,
+			type: Array as () => string[],
 			required: false,
-			
-			default(rawProps)
-			{
-				return [];
-			}
+			default: () => []
 		}
 	}
-};
+});
 </script>
 
 <template>

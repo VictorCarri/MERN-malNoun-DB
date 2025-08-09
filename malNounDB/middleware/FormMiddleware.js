@@ -9,8 +9,11 @@ module.exports.jsonValidator = body().isJSON(); // Validates the entire body as 
 * @return True if the string contains only
 */
 module.exports.validateMalayalam = (toValidate) => {
-	const malReg = /^[\u0D00-\u0D7F]+$/u; // Regex to ensure that the string contains only Malayalam characters
-	return malReg.test(toValidate); // Check the string against the regex and return the result
+	const malReg = /^[\u0D00-\u0D7F| ]+$/u; // Regex to ensure that the string contains only Malayalam characters or spaces
+	console.log("validateMalayalam: Testing the string \"%s\" for Malayalam code points\n\tCodepoints in the string: %o", toValidate, [...toValidate].map(char => char.charAt(0)));
+	const toReturn = malReg.test(toValidate); // Check the string against the regex and return the result
+	console.log("validateMalayalam: returning %o", toReturn);
+	return toReturn;
 };
 
 // Ensure that the gender string is one of "masculine", "feminine", or "neuter" (case-insensitive)

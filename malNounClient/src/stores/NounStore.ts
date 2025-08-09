@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import type { Noun } from "../types/noun.ts";
 
 export const useNounStore = defineStore("noun", {
 		state: () => {
@@ -6,12 +7,19 @@ export const useNounStore = defineStore("noun", {
 				nounAPIURL: "https://mernnoundb.victorcarri.com/api",
 				currentNoun: {
 					animate: false,
-					gender: "",
+					denotesYoungChild: false,
+					gender: "neuter",
+					hasIrregularPlural: false,
+					hasMultiplePlurals: false,
+					hasPlural: true,
 					human: false,
+					meanings: [] as string[],
+					multiplePlurals: [] as string[],
+					pluralOptional: false,
 					singular: "",
 					plural: "",
-					id: ""
-				}
+					irregularPlural: ""
+				} as Noun
 			};
 		},
 
@@ -21,7 +29,7 @@ export const useNounStore = defineStore("noun", {
 		},
 
 		actions: {
-			setCurrentNoun(noun)
+			setCurrentNoun(noun : Noun)
 			{
 				this.currentNoun = noun;
 			}

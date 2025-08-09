@@ -4,6 +4,7 @@ import { RouterLink, RouterView } from "vue-router";
 import { BLink, BContainer, BRow, BCol, BButton, BAlert } from "bootstrap-vue-next";
 import { useUserStore } from "../stores/UserStore";
 import { useNounStore } from "../stores/NounStore";
+import type { Noun } from "../types/noun.ts";
 
 /*const store = useStore();
 const isLoggedIn = computed(() => store.state.loggedIn);
@@ -16,6 +17,9 @@ const userName = computed(() => store.state.userName);*/
 		Loading noun data...
 	</div>
 	<div v-else>
+		<b-container v-if="!userData.isLoggedIn">
+			Please <b-link to="/login">login</b-link> to edit nouns.
+		</b-container>
 		<b-alert v-show="showLogoutAlert" variant="success">
 			Successfully logged you out!
 		</b-alert>
@@ -29,6 +33,18 @@ const userName = computed(() => store.state.userName);*/
 			<h1>Welcome, {{userData.getUserName}}</h1>
 			<h2>Editable list of nouns</h2>
 		</div>
+		<b-row v-if="userData.isLoggedIn">
+			<b-col>
+				<b-button @click="onCreate">
+					Add a new noun
+				</b-button>
+			</b-col>
+			<b-col>
+				<b-button @click="onLogout">
+					Logout
+				</b-button>
+			</b-col>
+		</b-row>
 		<h2 v-else>List of nouns</h2>
 		<b-container fluid>
 			<b-row fluid>
@@ -69,7 +85,7 @@ const userName = computed(() => store.state.userName);*/
 				</b-col>
 				<b-col>
 					{{ 
-						noun.gender.charAt(0).toUpperCase() + noun.gender.slice(1)
+						noun.gender !== undefined ? noun.gender.charAt(0).toUpperCase() + noun.gender.slice(1) : ""
 					}}
 				</b-col>
 				<b-col>
@@ -101,21 +117,6 @@ const userName = computed(() => store.state.userName);*/
 					</b-button>
 				</b-col>
 			</b-row>
-			<b-row v-if="userData.isLoggedIn">
-				<b-col>
-					<b-button @click="onCreate">
-						Add a new noun
-					</b-button>
-				</b-col>
-				<b-col>
-					<b-button @click="onLogout">
-						Logout
-					</b-button>
-				</b-col>
-			</b-row>
-		</b-container>
-		<b-container v-if="!userData.isLoggedIn">
-			Please <b-link to="/login">login</b-link> to edit nouns.
 		</b-container>
 	</div>
   </main>
@@ -127,25 +128,25 @@ export default {
 	data()
 	{
 		return {
-			nouns: [],
+			nouns: [] as Noun[],
 			loading: true,
 			userData: useUserStore(),
 			nounData: useNounStore(),
 			showLogoutAlert: false,
-			deletedNoun: "",
+			deletedNoun: {} as Noun,
 			showDeletionAlert: false,
 			deletionError: "",
 			showDeletionFailureAlert: false
 		};
 	},
 	methods: {
-		onCreate(e)
+		onCreate()
 		{
 			console.log("Redirecting to creation page...");
 			this.$router.push("/create");
 		},
 
-		onEdit(data)
+		onEdit(data : Noun)
 		{
 			console.log("Redirecting you to the editing page...\nData = %o", data);
 			this.nounData.setCurrentNoun(data);
@@ -153,11 +154,11 @@ export default {
 			console.log("onEdit: After router call");
 		},
 
-		async onDelete(noun)
+		async onDelete(noun : Noun)
 		{
 			console.log("Deleting noun %o", noun._id);
 			const fetchURL = new URL(this.nounData.getNounAPIURL + "/nouns/" + noun._id);
-			const fetchOpts = {
+			const fetchOpts : RequestInit = {
 					method: "DELETE",
 					credentials: "include",
 					headers: {
@@ -199,7 +200,7 @@ export default {
 			}
 		},
 
-		onLogout(e)
+		onLogout(value : MouseEvent) : any
 		{
 			console.log("Logging out...\n\tUser data: %o\n\tUser API URL: %s", this.userData, this.userData.getUserAPIURL);
 			fetch(this.userData.getUserAPIURL + "/logout",

@@ -3,6 +3,8 @@ import { BForm, BRow, BFormGroup, BFormCheckbox, BFormSelect, BFormSelectOption,
 import MeaningsList from "./MeaningsList.vue";
 import PluralInfo from "./PluralInfo.vue";
 import { object, boolean, string, array } from "yup";
+import type { FormData } from "../types/FormData.ts";
+import type { MeaningsListChangedHandler } from "../types/MeaningsListChangedHandler.ts";
 </script>
 
 <template>
@@ -69,13 +71,13 @@ import { object, boolean, string, array } from "yup";
 			</b-row>
 			<b-row>
 				<b-form-group
-					id="nounTextInpGroup"
+					id="singularInpGroup"
 					label="Please type the noun in Malayalam Unicode:"
-					label-form="nounTextInp"
+					label-form="singularInp"
 					description="The noun in Malayalam Unicode."
 				>
 					<b-form-input
-						v-model="form.nounText"
+						v-model="form.singular"
 						placeholder="മലയാളം"
 					/>
 				</b-form-group>
@@ -135,34 +137,36 @@ import { object, boolean, string, array } from "yup";
 </template>
 
 <script lang="ts">
-export default {
+import { defineComponent } from "vue";
+import type { PropType } from "vue";
+
+export default defineComponent({
 	name: "NounForm",
 
 	props: {
 		meaningsListChangedHandler: {
-			type: Function,
+			type: Function as PropType<MeaningsListChangedHandler>,
 			required: true
 		},
 		initialForm: {
-			type: Object,
+			type: Object as PropType<FormData>,
 			required: false,
 
-			default (rawProps)
+			default (rawProps : object) : FormData
 			{
 				return {
 					isAnimate: false,
-					gender: "",
+					gender: undefined,
 					isHuman: false,
-					nounText: "",
-					errors: [],
-					meanings: [],
+					singular: "",
+					errors: [] as string[],
+					meanings: [] as string[],
 					pluralIsOptional: false,
 					hasPlural: true,
 					isYoungChild: false,
 					hasMultiplePlurals: false,
-					pluralsList: [],
+					pluralsList: [] as string[],
 					hasIrregularPlural: false,
-					hasPlural: true,
 					irregularPlural: ""
 				};
 			}
@@ -173,22 +177,6 @@ export default {
 		}
 	},
 
-	validateMalayalam(value, context)
-	{
-		const codePoints = Array.from(value);
-		console.log("NounForm.validateMalayalam: Malayalam code points: %o", codePoints);
-		let toReturn = true;
-
-		for (let codePoint = 0; codePoint < codePoints.length - 1; codePoint++)
-		{
-			console.log("NounForm.validateMalayalam: Current Malayalam code point: %o", codePoints[codePoint]);
-			const curCodePoint = codePoints[codePoint].codePointAt(0);
-			console.log("NounForm.validateMalayalam: Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
-			toReturn = toReturn && curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F;
-		}
-
-		return toReturn;
-	},
 	
 	data() {
 		console.log("NounForm.data(): initialForm = %o", this.initialForm);
@@ -199,7 +187,7 @@ export default {
 				isAnimate: this.initialForm.isAnimate,
 				gender: this.initialForm.gender,
 				isHuman: this.initialForm.isHuman,
-				nounText: this.initialForm.nounText,
+				singular: this.initialForm.singular,
 				errors: [],
 				meanings: this.initialForm.meanings,
 				pluralIsOptional: this.initialForm.pluralIsOptional,
@@ -208,25 +196,34 @@ export default {
 				hasMultiplePlurals: this.initialForm.hasMultiplePlurals,
 				pluralsList: this.initialForm.pluralsList,
 				hasIrregularPlural: this.initialForm.hasIrregularPlural,
-				hasPlural: this.initialForm.hasPlural,
 				irregularPlural: this.initialForm.irregularPlural
-			},
+			} as FormData,
 			formSchema: object(
 				{
 					isAnimate: boolean().required().default(false),
 					gender: string().required().lowercase().oneOf(["masculine", "feminine", "neuter"]),
 					isHuman: boolean().required().default(false),
-					nounText: string().required().min(1).test("onlyContainsMalayalam", "${path} contains invalid Malayalam code points", (value, context) => {
-							const codePoints = Array.from(value);
+					singular: string().required().min(1).test("onlyContainsMalayalam", "${path} contains invalid Malayalam code points", (value, context) => {
+							const codePoints : string[] = Array.from(value);
 							console.log("Malayalam code points: %o", codePoints);
 							let toReturn = true;
+							let curCodePoint : number | undefined = 0;
 		
-							for (let codePoint = 0; codePoint < codePoints.length - 1; codePoint++)
+							for (let codePoint = 0; codePoint < codePoints.length; codePoint++)
 							{
 								console.log("Current Malayalam code point: %o", codePoints[codePoint]);
-								const curCodePoint = codePoints[codePoint].codePointAt(0);
-								console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
-								toReturn = toReturn && curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F;
+								curCodePoint = codePoints[codePoint].codePointAt(0);
+	
+								if (curCodePoint !== undefined)
+								{
+									console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o\n\tCurrent code-point is between the minimum & the maximum: %o\n\ttoReturn = %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F, curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F, toReturn);
+									toReturn = toReturn && (curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F || curCodePoint == 0x0020); // Allow spaces
+								}
+
+								else
+								{
+									return false;
+								}
 							}
 
 							return toReturn;
@@ -236,22 +233,31 @@ export default {
 					hasPlural: boolean().optional().default(true),
 					hasMultiplePlurals: boolean().required().default(false),
 					pluralsList: array().optional().of(string().required().min(1).test("onlyContainsMalayalam", "${path} contains invalid Malayalam code points", (value, context) => {
-							const codePoints = Array.from(value);
+							const codePoints : string[] = Array.from(value);
 							console.log("Malayalam code points: %o", codePoints);
 							let toReturn = true;
+							let curCodePoint : number | undefined = 0;
 		
-							for (let codePoint = 0; codePoint < codePoints.length - 1; codePoint++)
+							for (let codePoint = 0; codePoint < codePoints.length; codePoint++)
 							{
 								console.log("Current Malayalam code point: %o", codePoints[codePoint]);
-								const curCodePoint = codePoints[codePoint].codePointAt(0);
-								console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
-								toReturn = toReturn && curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F;
+								curCodePoint = codePoints[codePoint].codePointAt(0);
+
+								if (curCodePoint !== undefined)
+								{
+									console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
+									toReturn = toReturn && (curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F || curCodePoint == 0x0020); // Allow spaces
+								}
+
+								else
+								{
+									return false;
+								}
 							}
 
 							return toReturn;
 					})),
 					hasIrregularPlural: boolean().required().default(false),
-					hasPlural: boolean().optional().default(true),
 					irregularPlural: string().transform((value, origValue) => {
 							return value === "" ? undefined : value;
 						}).optional().min(1).test("onlyContainsMalayalam", "${path} contains invalid Malayalam code points", (value, context) => {
@@ -260,24 +266,35 @@ export default {
 								return true; // An empty string is valid
 							}
 
-							const codePoints = Array.from(value);
+							const codePoints : string[] = Array.from(value);
 							console.log("Malayalam code points: %o", codePoints);
 							let toReturn = true;
+							let curCodePoint : number | undefined = 0;
 		
-							for (let codePoint = 0; codePoint < codePoints.length - 1; codePoint++)
+							for (let codePoint = 0; codePoint < codePoints.length; codePoint++)
 							{
 								console.log("Current Malayalam code point: %o", codePoints[codePoint]);
-								const curCodePoint = codePoints[codePoint].codePointAt(0);
-								console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
-								toReturn = toReturn && curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F;
+								curCodePoint = codePoints[codePoint].codePointAt(0);
+
+								if (curCodePoint !== undefined)
+								{
+									console.log("Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
+									toReturn = toReturn && (curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F || curCodePoint == 0x0020); // Allow spaces
+								}
+
+								else
+								{
+									return false;
+								}
 							}
 
 							return toReturn;
-					})
+					}),
+					isYoungChild: boolean().required().default(false)
 				}
 			),
 			formValidationResult: {},
-			formValidationErrs: []
+			formValidationErrs: [] as string[]
 		};
 		console.log("NounForm.data(): returning %o", toReturn);
 		return toReturn;
@@ -288,7 +305,7 @@ export default {
 		BRow,
 		BFormGroup,
 		BFormCheckbox,
-		BFormSelect,
+		BFormSelect: BFormSelect as any,
 		BFormSelectOption,
 		BFormInput,
 		BButton
@@ -297,6 +314,34 @@ export default {
 	emits: ["nounFormSubmitted", "nounFormReset", "validityChanged"],
 
 	methods: {
+
+		validateMalayalam(value : string, context : object)
+		{
+			const codePoints : string[] = Array.from(value);
+			console.log("NounForm.validateMalayalam: Malayalam code points: %o", codePoints);
+			let toReturn = true;
+			let curCodePoint : number | undefined = 0;
+	
+			for (let codePoint = 0; codePoint < codePoints.length - 1; codePoint++)
+			{
+				console.log("NounForm.validateMalayalam: Current Malayalam code point: %o", codePoints[codePoint]);
+				curCodePoint = codePoints[codePoint].codePointAt(0);
+	
+				if (curCodePoint !== undefined)
+				{
+					console.log("NounForm.validateMalayalam: Current code point: %d\n\tCurrent code point is equal to or higher than the minimum: %o\n\tCurrent codepoint is equal to or lower than the maximum: %o", curCodePoint, curCodePoint >= 0x0D00, curCodePoint <= 0x0D7F);
+					toReturn = toReturn && curCodePoint >= 0x0D00 && curCodePoint <= 0x0D7F;
+				}
+	
+				else
+				{
+					return false;
+				}
+			}
+	
+			return toReturn;
+		},
+
 		async formIsValid()
 		{
 			this.formValidationErrs = []; // Clear old errors
@@ -308,7 +353,7 @@ export default {
 				return true;
 			}
 
-			catch (e)
+			catch (e : any)
 			{
 				console.error("Form validation error: %o", e);
 				this.formValidationErrs = e.errors;
@@ -316,37 +361,37 @@ export default {
 			}
 		},
 
-		onPluralsListChanged(pluralsList)
+		onPluralsListChanged(pluralsList : string[])
 		{
 			console.log("NounForm.onPluralsListChanged: plurals list = %o", pluralsList);
 			this.form.pluralsList = pluralsList;
 		},
 
-		onHasPluralChanged(hasPlural)
+		onHasPluralChanged(hasPlural : boolean)
 		{
 			console.log("NounForm.onHasPluralChanged: hasPlural = %o", hasPlural);
 			this.form.hasPlural = hasPlural;
 		},
 
-		onHasIrregularPluralChanged(hasIrregularPlural)
+		onHasIrregularPluralChanged(hasIrregularPlural : boolean)
 		{
 			console.log("NounForm.onHasIrregularPluralChanged: hasIrregularPlural = %o", hasIrregularPlural);
 			this.form.hasIrregularPlural = hasIrregularPlural;
 		},
 
-		onIrregularPluralChanged(irregularPlural)
+		onIrregularPluralChanged(irregularPlural : string)
 		{
 			console.log("NounForm.onIrregularPluralChanged: irregularPlural = %o", irregularPlural);
 			this.form.irregularPlural = irregularPlural;
 		},
 
-		onPluralIsOptionalChanged(pluralIsOptional)
+		onPluralIsOptionalChanged(pluralIsOptional : boolean)
 		{
 			console.log("NounForm.onPluralIsOptional: pluralIsOptional = %o", pluralIsOptional);
 			this.form.pluralIsOptional = pluralIsOptional;
 		},
 
-		onHasMultiplePluralsChanged(hasMultiplePlurals)
+		onHasMultiplePluralsChanged(hasMultiplePlurals : boolean)
 		{
 			console.log("NounForm.onHasMultiplePluralsChanged: hasMultiplePlurals = %o", hasMultiplePlurals);
 			this.form.hasMultiplePlurals = hasMultiplePlurals;
@@ -355,8 +400,9 @@ export default {
 		async onFormChanged()
 		{
 			const isValid = await this.formIsValid();
+			console.log("NounForm.onFormChanged: codepoints in this.form.singular = %o", [...this.form.singular].map(char => char.codePointAt(0)))
 			this.$emit("validityChanged", isValid, this.form, this.formValidationResult, this.formValidationErrs);
 		}
 	}
-};
+});
 </script>

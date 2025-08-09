@@ -84,9 +84,9 @@ export default {
 data() {
 		return {
 			form: {
-				email: null,
-				password: null,
-				errors: [],
+				email: null as string | null,
+				password: null as string | null,
+				errors: [] as string[],
 				emailState: false,
 				passwordState: false
 			},
@@ -98,7 +98,7 @@ data() {
 		};
 	},
 	methods: {
-		emailIsValid(email)
+		emailIsValid(email : string)
 		{
 			 var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		      let toReturn = re.test(email);
@@ -110,38 +110,6 @@ data() {
 		{
 			console.log("formIsValid called\n\tthis.form = %o", this.form);
 			this.form.errors = []; // Reset validation errors on call
-
-			/*if (this.form.email && this.form.password) // The user has entered something for both
-			{
-				if (this.emailIsValid(this.form.email)) // The email is valid
-				{
-					this.form.emailState = true; // Mark the input field as valid
-					return true; // The form is valid
-				}
-
-				else // The email is invalid
-				{
-					this.form.emailState = false;
-					this.form.errors.push("Your email is invalid");
-					return false;
-				}
-			}
-
-			else // The user has not entered one of the 2
-			{
-				if (!this.form.email)
-				{
-					this.form.emailState = false;
-					this.form.errors.push("Email required");
-				}
-
-				if (!this.form.password)
-				{
-					this.form.errors.push("Password required");
-				}
-
-				return false; // The form is invalid
-			}*/
 
 			if (this.form.email) // The user has entered their email
 			{
@@ -183,7 +151,7 @@ data() {
 			}
 		},
 
-		onLogin(e)
+		onLogin(e : Error)
 		{
 			//e.preventDefault();
 			console.log("onLogin: formIsValid = %o", this.formIsValid());
@@ -248,7 +216,7 @@ data() {
 			);
 		},
 
-		onReset(e)
+		onReset(e : Error)
 		{
 			//e.preventDefault();
 

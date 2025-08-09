@@ -4,16 +4,13 @@ import { BLink, BRow, BCol, BAlert } from "bootstrap-vue-next";
 import { useNounStore } from "../stores/NounStore";
 //import MeaningsList from "../components/MeaningsList.vue"; // Custom component to allow the user to edit a list of meanings
 import NounForm from "../components/NounForm.vue"; // The generic form for editing a noun
+import type { FormData } from "../types/FormData.ts";
+import type { ServerData } from "../types/ServerData.ts";
+import { defineComponent } from "vue";
 </script>
 
 <template>
 	<div v-if="userData.isLoggedIn">
-		<b-alert variant="success" v-show="showSuccessAlert">
-			Successfully created the noun {{ createdNoun }}!
-		</b-alert>
-		<b-alert variant="danger" v-show="formErrors.length" dismissible>
-			There is at least 1 error!
-		</b-alert>
 		<b-row>
 			<b-col>
 				<h1>
@@ -29,6 +26,12 @@ import NounForm from "../components/NounForm.vue"; // The generic form for editi
 			</b-col>
 		</b-row>
 		<noun-form v-if="showForm" :meanings-list-changed-handler="onMeaningsListChanged" @noun-form-submitted="onCreateNoun" @noun-form-reset="onReset" @validity-changed="onValidityChanged" />
+		<b-alert variant="success" v-show="showSuccessAlert">
+			Successfully created the noun {{ createdNoun }}!
+		</b-alert>
+		<b-alert variant="danger" v-show="formErrors.length" dismissible>
+			There is at least 1 error!
+		</b-alert>
 	</div>
 	<div v-else>
 		You must <b-link to="/login">login</b-link> to add a noun to the database.
@@ -36,7 +39,7 @@ import NounForm from "../components/NounForm.vue"; // The generic form for editi
 </template>
 
 <script lang="ts">
-export default {
+export default defineComponent({
 	name: "CreateView",
 	data()
 	{
@@ -46,13 +49,15 @@ export default {
 			nounData: useNounStore(),
 			showSuccessAlert: false,
 			createdNoun: "",
-			formErrors: [],
+			formErrors: [] as string[],
 			formIsValid: false,
-			showErrorsAlert: false
+			showErrorsAlert: false,
+			meanings: [] as string[],
+			form: {} as FormData
 		};
 	},
 	methods: {
-		onMeaningsListChanged(meaningsList)
+		onMeaningsListChanged(meaningsList : string[])
 		{
 			console.log("Meanings list changed: %o", meaningsList);
 			this.meanings = [];
@@ -65,7 +70,7 @@ export default {
 			console.log("Updated meanings: %o", this.meanings);	
 		},
 
-		onCreateNoun(formData)
+		onCreateNoun(formData : FormData)
 		{
 			//e.preventDefault();
 			
@@ -75,13 +80,26 @@ export default {
 			}
 			
 			console.log("Creating a noun...\nForm data = %o", formData);
-			const nounData = { // Req'd parameters
-				singular: formData.nounText,
+			let nounData = { // Req'd parameters
+				singular: formData.singular,
 				human: formData.isHuman,
 				animate: formData.isAnimate,
 				gender: formData.gender,
-				meanings: formData.meanings
-			};
+				meanings: formData.meanings,
+				hasPlural: formData.hasPlural,
+				denotesYoungChild: formData.isYoungChild,
+				hasIrregularPlural: formData.hasIrregularPlural,
+				pluralOptional: false,
+				irregularPlural: "",
+				hasMultiplePlurals: false,
+				multiplePlurals: formData.pluralsList,
+				plural: formData.irregularPlural
+			} as ServerData;
+
+			if (formData.pluralIsOptional)
+			{
+				nounData.pluralOptional = true;
+			}
 
 			/* Only include optional parameters if they're set to non-defaults */
 			if (formData.hasOwnProperty("irregularPlural"))
@@ -92,34 +110,14 @@ export default {
 				}
 			}
 
-			if (formData.pluralIsOptional)
-			{
-				nounData.pluralOptional = true;
-			}
-
 			if (formData.pluralsList.length > 0)
 			{
 				nounData.multiplePlurals = formData.pluralsList;
 			}
 
-			if (!formData.hasPlural)
-			{
-				nounData.hasPlural = false;
-			}
-
-			if (formData.isYoungChild)
-			{
-				nounData.denotesYoungChild = true;
-			}
-
 			if (formData.hasMultiplePlurals)
 			{
 				nounData.hasMultiplePlurals = true;
-			}
-
-			if (formData.hasIrregularPlural)
-			{
-				nounData.hasIrregularPlural = true;
 			}
 
 			console.log("Noun data to send: %o", nounData);
@@ -145,7 +143,7 @@ export default {
 								this.showSuccessAlert = false;
 								this.$router.push("/"); // Redirect the user to the homepage to show them the newly-created noun
 							},
-							4000
+							3000
 						);
 					}
 				
@@ -162,16 +160,23 @@ export default {
 		{
 			this.form = {
 				isAnimate: false,
-				gender: "",
+				gender: undefined,
 				isHuman: false,
-				nounText: "",
+				singular: "",
 				errors: [],
-				meanings: []
-			};
+				meanings: [],
+				pluralIsOptional: false,
+				hasPlural: true,
+				isYoungChild: false,
+				hasMultiplePlurals: false,
+				pluralsList: [],
+				hasIrregularPlural: false,
+				irregularPlural: ""
+			} as FormData;
 			this.showSuccessAlert = false;
 		},
 
-		onReset(e)
+		onReset(e : Error)
 		{
 			//e.preventDefault();
 			
@@ -186,7 +191,7 @@ export default {
 			);
 		},
 
-		onValidityChanged(formIsValid, form, formValidationResult, formValidationErrs)
+		onValidityChanged(formIsValid : boolean, form : FormData, formValidationResult : object, formValidationErrs : string[])
 		{
 			console.log("onValidityChanged: formIsValid = %o", formIsValid);
 			console.log("onValidityChanged: formValidationErrs = %o", formValidationErrs);
@@ -205,5 +210,5 @@ export default {
 			}
 		}
 	}
-};
+});
 </script>

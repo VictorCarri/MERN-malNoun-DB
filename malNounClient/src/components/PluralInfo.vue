@@ -83,7 +83,7 @@ import PluralsList from "./PluralsList.vue";
 					v-model="nounHasMultiplePlurals"
 					name="hasMultiplePluralsInp"
 					@change="$emit('hasMultiplePluralsChanged', nounHasMultiplePlurals)">
-					Set whether or not this noun has multiple plurals
+					Set whether or not this noun has multiple irregular plurals
 				</b-form-checkbox>
 			</b-form-group>
 		</b-row>
@@ -142,10 +142,12 @@ export default {
 	emits: ["pluralsListChanged", "hasPluralChanged", "hasIrregularPluralChanged", "irregularPluralChanged", "pluralIsOptionalChanged", "hasMultiplePluralsChanged"],
 
 	methods: {
-		onPluralsListChanged(pluralsList)
+		onPluralsListChanged(pluralsList : string[])
 		{
-			console.log("PluralInfo: plurals list changed to %o", pluralsList);
-			this.$emit("pluralsListChanged", pluralsList);
+			const pluralsListToEmit = pluralsList;
+			pluralsListToEmit.sort();
+			console.log("PluralInfo: plurals list changed to %o", pluralsListToEmit);
+			this.$emit("pluralsListChanged", pluralsListToEmit);
 		}
 	}
 };

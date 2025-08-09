@@ -49,7 +49,7 @@ export default {
 	data()
 	{
 		return {
-			enteredPlurals: []
+			enteredPlurals: [] as string[]
 		};
 	},
 
@@ -63,14 +63,14 @@ export default {
 	emits: ["pluralsListChanged"],
 
 	methods: {
-		onAddPlural(e)
+		onAddPlural(e : MouseEvent)
 		{
 			console.log("PluralsList.onAddPlural: Adding a plural to the plurals list");
 			this.enteredPlurals.push("");
 			this.$emit("pluralsListChanged", this.enteredPlurals);
 		},
 
-		onDeletePlural(index)
+		onDeletePlural(index : number)
 		{
 			console.log("PluralsList.onDeletePlural: Deleting the plural @ index %d", index);
 			this.enteredPlurals.splice(index, 1); // Remove the plural @ that index
